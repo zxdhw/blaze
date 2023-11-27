@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
                           binCount, binBufSize, binningRatio);
 
     Worklist<VID>* frontier = new Worklist<VID>(n);
+    //将所有位置为1
     frontier->activate_all();
 
     // Initialize values

@@ -12,12 +12,19 @@
 
 namespace blaze {
 
+#define __NR_io_submit_xrp 447
+
 static int io_setup(unsigned nr, aio_context_t *ctxp) {
     return syscall(__NR_io_setup, nr, ctxp);
 }
 
 static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
     return syscall(__NR_io_submit, ctx, nr, iocbpp);
+}
+
+static int io_submit_xrp(aio_context_t ctx, long nr, struct iocb **iocbpp, 
+                                    unsigned int bpf_fd, char ** scratch_bufs) {
+    return syscall(__NR_io_submit_xrp, ctx, nr, iocbpp, bpf_fd, scratch_bufs);
 }
 
 static int io_getevents(aio_context_t ctx, long min_nr, long max_nr,

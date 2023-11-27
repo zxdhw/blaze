@@ -287,6 +287,7 @@ class Graph {
         _activated_pages = new Bitmap* [_num_disks];
         for (int i = 0; i < _num_disks; i++) {
             _activated_pages[i] = new Bitmap(GetNumPages(i));
+            //bitmap ： 0
             _activated_pages[i]->reset_parallel();
         }
     }

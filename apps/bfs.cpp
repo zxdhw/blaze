@@ -35,8 +35,13 @@ static cll::opt<int>
 
 static cll::opt<int>
         binBufSize("binBufSize",
-                cll::desc("Size of a bin buffer (default: 128)"),
+                cll::desc("Size of a bin buffer(number of nodes) (default: 128)"),
                 cll::init(BIN_BUF_SIZE));
+
+// static cll::opt<int>
+//         use_ebpf("use_ebpf",
+//                 cll::desc("use ebpf ibaio syscall) (default: 0)"),
+//                 cll::init(USE_EBPF));
 
 static cll::opt<float>
         binningRatio("binningRatio",
@@ -99,14 +104,14 @@ int main(int argc, char **argv) {
 
     parents[startNode] = startNode;
 
+    // zhengxd: 创建一个insertbag，将start node加进去
     Worklist<VID>* frontier = new Worklist<VID>(n);
     frontier->activate(startNode);
 
     galois::StatTimer time("Time", "BFS_MAIN");
     time.start();
-
     while (!frontier->empty()) {
-        Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking);
+        Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking, use_ebpf);
         delete frontier;
         frontier = output;
     }

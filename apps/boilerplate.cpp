@@ -13,8 +13,12 @@ cll::opt<int>
 
 cll::opt<unsigned int>
     ioBufferSize("ioBufferSize",
-                    cll::desc("IO buffer space size in MB (default: 256)"),
+                    cll::desc("IO buffer space size in MB (default: 1024)"),
                     cll::init(64));
+cll::opt<unsigned int>
+    use_ebpf("ebpf",
+                    cll::desc("use ebpf ibaio syscall) (default: 0)"),
+                    cll::init(0));
 
 cll::opt<std::string>
     outIndexFilename(cll::Positional, cll::desc("<out index file>"), cll::Required);

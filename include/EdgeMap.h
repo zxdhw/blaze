@@ -28,7 +28,8 @@ class EdgeMapExecutor {
     EdgeMapExecutor(Gr& graph,
                     Worklist<VID>* frontier,
                     Func&& func,
-                    FLAGS flags)
+                    FLAGS flags,
+                    FLAGS use_ebpf)
         :   _runtime(Runtime::getRuntimeInstance()),
             _graph(graph),
             _out_frontier(nullptr),
@@ -38,6 +39,7 @@ class EdgeMapExecutor {
             _pb_engine(_runtime.getPBEngine()),
             _func(func),
             _flags(flags),
+            _use_ebpf(use_ebpf),
             _work_exists(true),
             _num_activated_nodes(0),
             _num_activated_edges(0),
@@ -48,6 +50,7 @@ class EdgeMapExecutor {
 
         uint64_t n = _graph.NumberOfNodes();
         uint64_t m = _graph.NumberOfEdges();
+        //遍历frontier，获取每个node的degree
         _num_activated_edges = frontier ? getNumberOfActiveEdges(frontier) : m;
 
         // nothing to do
@@ -57,7 +60,7 @@ class EdgeMapExecutor {
             return;
         }
 
-        // filter out empty nodes
+        // filter out empty nodes，删除无效的node
         filterOutEmptyNodes(frontier);
 
         _num_activated_nodes = frontier ? frontier->count() : n;
@@ -71,6 +74,8 @@ class EdgeMapExecutor {
                 if (frontier->is_dense())
                     frontier->to_sparse();
                 else
+                //无论frontier是否为dense，都根据sparse创建dense，只是 is_dense不置为true
+                //用于scatter线程检查actived node
                     frontier->fill_dense();
             }
 
@@ -84,6 +89,7 @@ class EdgeMapExecutor {
         }
 
         // build sparse page frontier in sparse case
+        // 根据node frontier 创建 graph的activepage（bitmap）
         if (frontier) {
             if (frontier->is_dense()) {
                 buildDensePageFrontier(frontier);
@@ -100,7 +106,7 @@ class EdgeMapExecutor {
             _pb_engine->setFrontier(_graph, frontier, flags);
         else
             _compute_engine->setFrontier(_graph, frontier, flags);
-
+        //传递给IO engine 两个frontier，一个是node，一个是page
         _io_engine->setFrontier(frontier, _sparse_page_frontier);
     }
 
@@ -119,13 +125,13 @@ class EdgeMapExecutor {
 
         if (use_prop_blocking(_flags)) {
             _pb_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
             _compute_time = _pb_engine->stop(_graph, _func, sync);
             _out_frontier = _pb_engine->getOutFrontier();
 
         } else {
             _compute_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
             _compute_time = _compute_engine->stop(_graph);
             _out_frontier = _compute_engine->getOutFrontier();
         }
@@ -134,7 +140,9 @@ class EdgeMapExecutor {
 
         if (_work_exists) {
             uint64_t io_bytes = _io_engine->getTotalBytesAccessed();
+            uint64_t io_bytes_ebpf = _io_engine->getTotalBytesAccessed_ebpf();
             _runtime.addAccessedIoBytes(io_bytes);
+            _runtime.addAccessedIoBytes_ebpf(io_bytes_ebpf);
             _runtime.addAccessedEdges(_num_activated_edges);
             _runtime.addIoTime(_io_time);
         }
@@ -151,8 +159,10 @@ class EdgeMapExecutor {
     void print() {
         int round = _runtime.getRound();
         uint64_t io_bytes = 0;
+        uint64_t io_bytes_ebpf = 0;
         if (_io_engine)
             io_bytes = _io_engine->getTotalBytesAccessed();
+            io_bytes_ebpf = _io_engine->getTotalBytesAccessed_ebpf();
 
         // frontier type
         string frontier_type_name;
@@ -164,8 +174,8 @@ class EdgeMapExecutor {
         // general info
         std::string info;
         char buf[1024];
-        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %8.5f sec, %8.5f sec",
-                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes, _compute_time, _io_time);
+        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %12lu bytes(ebpf), %8.5f sec, %8.5f sec",
+                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes,io_bytes_ebpf, _compute_time, _io_time);
         info.append(buf);
 
         std::cout << info;
@@ -198,6 +208,7 @@ class EdgeMapExecutor {
 
         if (frontier->is_dense()) {
             Bitmap *bitmap = frontier->get_dense();
+            //只有不为空的node才为1
             Bitmap::and_bitmap(bitmap, _graph.GetNonEmptyNodes());
 
         } else {
@@ -236,6 +247,7 @@ class EdgeMapExecutor {
                     PAGEID pid, pid_end;
                     _graph.GetPageRange(vid, &pid, &pid_end);
                     while (pid <= pid_end) {
+                        //zhengxd： 用于Page interleaving布局寻找disk
                         int disk_id = pid % num_disks;
                         _sparse_page_frontier[disk_id]->push(pid++ >> num_disks_bit);
                     }
@@ -276,6 +288,7 @@ class EdgeMapExecutor {
     std::vector<CountableBag<PAGEID>*>     _sparse_page_frontier;  // Page frontier for sparse case
     Func&                       _func;
     FLAGS                       _flags;
+    FLAGS                       _use_ebpf;
     bool                        _work_exists;
     uint64_t                    _num_activated_nodes;
     uint64_t                    _num_activated_edges;
@@ -285,8 +298,8 @@ class EdgeMapExecutor {
 };
 
 template <typename G, typename F>
-Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0) {
-    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags);
+Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS use_ebpf = 0) {
+    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags, use_ebpf);
     executor.run();
     return executor.newFrontier();
 }

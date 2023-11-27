@@ -33,7 +33,10 @@ struct IoItem {
     PAGEID  page;
     int     num;
     char*   buf;
-    IoItem(int d, PAGEID p, int n, char* b): disk_id(d), page(p), num(n), buf(b) {}
+    bool    scratch;
+    char*   _scratch_buf;
+    IoItem(int d, PAGEID p, int n, char* b, bool s, char* c): disk_id(d), page(p), num(n), buf(b) , scratch(s), _scratch_buf(c) {}
+    IoItem(int d, PAGEID p, int n, char* b, bool s): disk_id(d), page(p), num(n), buf(b),scratch(s) {}
 };
 
 using PageReadList = std::vector<std::pair<PAGEID, char *>>;
@@ -43,6 +46,8 @@ using Mutex = galois::substrate::SimpleLock;
 typedef uint32_t FLAGS;
 const FLAGS no_output           = 0x01;
 const FLAGS prop_blocking       = 0x10;
+// 1 表示使用，其他任何值均表示不使用
+const FLAGS ebpf                = 0x01;
 
 inline bool should_output(const FLAGS& flags) {
     return !(flags & no_output);
@@ -52,6 +57,9 @@ inline bool use_prop_blocking(const FLAGS& flags) {
     return flags & prop_blocking;
 }
 
+inline bool is_use_ebpf(const FLAGS& flags) {
+    return flags & ebpf;
+}
 enum ComputeWorkerRole { NORMAL, BIN, ACCUMULATE };
 
 #endif // BLAZE_TYPES_H

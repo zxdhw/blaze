@@ -308,6 +308,7 @@ struct Bins {
     void append(unsigned tid, uint32_t x1, T x2) {
         // calculate bin index
         int bid = x1 >> _bin_shift;
+        // int bid = rand() % 4095;
 
         // get the current buffer
         uint64_t * const cur_buf = _buf[tid] + bid * _bin_buf_size;
@@ -319,6 +320,7 @@ struct Bins {
 
             // reset the buffer index
             buf_idx = 0;
+            // printf("%d %d\n",tid,bid);
         }
 
         // insert entry

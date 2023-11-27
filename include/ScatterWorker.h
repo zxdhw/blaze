@@ -8,6 +8,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include "Bin.h"
+#include "ebpf_types.h"
 
 namespace blaze {
 
@@ -70,7 +71,7 @@ class ScatterWorker {
         std::chrono::duration<double> elapsed = time_end - time_start;
         _time = elapsed.count();
     }
-
+    //暂未使用
     uint64_t getNumProcessedPages() const {
         return _num_processed_pages;
     }
@@ -107,11 +108,12 @@ class ScatterWorker {
         }
 
         VID* edges = (VID*)(buffer + offset_in_buf);
-
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
-            if (func.cond(dst))
+            if (func.cond(dst)){
+                // printf("----edge vertex is %u -------\n",dst);
                 _bins->append(_id, dst, func.scatter(vid, dst));
+            }
         }
 
         return true;
@@ -122,15 +124,49 @@ class ScatterWorker {
         PAGEID ppid_start = item.page;
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
+        // printf("----nromal pid is %u -------\n",ppid_start);
         while (ppid_start < ppid_end) {
+            /* blaze的数据分布  
+             *  disk0----disk1----disk2
+             *  0,3,6----1,4,7----2,5,8(page id)
+             *  0,1,2----0,1,2----0,1,2(bitmap page id)
+            */
             const PAGEID pid = ppid_start * _num_disks + item.disk_id;
             processFetchedPage(graph, func, pid, buffer);
             ppid_start++;
             buffer += PAGE_SIZE;
         }
-        _num_processed_pages += item.num;
+        // 处理scratch
+        if(item.scratch){
+            Scratch* pscratch = (Scratch*) item._scratch_buf;
+            // pscratch->curr_index已经在magazine中迭代到max_index+1
+            // printf("----scratch resubmission times: %llu-----\n",pscratch->curr_index);
+            uint64_t index = 0;
+            while( pscratch->scratch && index <= pscratch->max_index){
+
+                ppid_start = pscratch->spage[index];
+                const PAGEID ppid_end_ebpf   = ppid_start + pscratch->length[index];
+                
+                // printf("----scratch pid is %u -------\n",ppid_start);
+                while (ppid_start < ppid_end_ebpf) {
+                    const PAGEID pid = ppid_start * _num_disks + item.disk_id;
+                    processFetchedPage(graph, func, pid, buffer);
+                    ppid_start++;
+                    buffer += PAGE_SIZE;
+                }
+                index++;
+            }
+        }
+        if(item.scratch){
+            Scratch* pscratch = (Scratch*) item._scratch_buf;
+            sync.add_num_free_pages(item.disk_id, (pscratch->buffer_len / PAGE_SIZE));
+            _num_processed_pages += (pscratch->buffer_len / PAGE_SIZE);
+            free(item._scratch_buf);
+        } else {
+            sync.add_num_free_pages(item.disk_id, item.num);
+            _num_processed_pages += item.num;
+        }
         free(item.buf);
-        sync.add_num_free_pages(item.disk_id, item.num);
     }
 
     template <typename Gr, typename Func>
