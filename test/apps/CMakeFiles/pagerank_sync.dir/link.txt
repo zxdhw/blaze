@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/pagerank_sync.dir/pagerank_sync.cpp.o CMakeFiles/pagerank_sync.dir/boilerplate.cpp.o CMakeFiles/pagerank_sync.dir/__/src/Runtime.cpp.o  -o ../bin/pagerank_sync  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 

@@ -35,7 +35,7 @@ static cll::opt<int>
 
 static cll::opt<int>
         binBufSize("binBufSize",
-                cll::desc("Size of a bin buffer (default: 128)"),
+                cll::desc("Size of a bin buffer(number of nodes) (default: 128)"),
                 cll::init(BIN_BUF_SIZE));
 
 static cll::opt<float>

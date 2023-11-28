@@ -1,0 +1,122 @@
+Linux 5.15.0-88-generic (inspur-NF5280M6) 	2023年11月27日 	_x86_64_	(128 CPU)
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1         222.71         2.59         0.11         0.39    2519040     110875     381554
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       34754.00      1427.72         0.00         0.00       1427          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       234798.00      4668.96         0.00         0.00       4668          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       116963.00      4525.38         0.00         0.00       4525          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       161158.00      2566.95         0.00         0.00       2566          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       226994.00      1414.59         0.00         0.00       1414          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       372028.00      2786.10         0.00         0.00       2786          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       49621.00      5867.40         0.00         0.00       5867          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       31015.00      3834.43         0.00         0.00       3834          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       24060.00      3007.50         0.00         0.00       3007          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       25534.00      3191.75         0.00         0.00       3191          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       51056.00      5479.39         0.00         0.00       5479          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1       30194.00      3184.96         0.00         0.00       3184          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+
+Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s    MB_read    MB_wrtn    MB_dscd
+nvme2n1           0.00         0.00         0.00         0.00          0          0          0
+
+

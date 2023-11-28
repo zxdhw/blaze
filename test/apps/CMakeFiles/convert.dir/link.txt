@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/convert.dir/convert.cpp.o CMakeFiles/convert.dir/boilerplate.cpp.o CMakeFiles/convert.dir/__/src/Runtime.cpp.o  -o ../bin/convert  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 

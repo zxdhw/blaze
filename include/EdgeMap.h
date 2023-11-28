@@ -65,6 +65,7 @@ class EdgeMapExecutor {
         // switch between dense, sparse
         if (frontier) {
             if (_num_activated_nodes + _num_activated_edges > m * DENSE_THRESHOLD) {
+            // if ( _num_activated_edges > (n * n) ) {
                 if (!frontier->is_dense())
                     frontier->to_dense();
             } else {

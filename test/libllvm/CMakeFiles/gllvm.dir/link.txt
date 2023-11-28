@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgllvm.a  CMakeFiles/gllvm.dir/src/Allocator.cpp.o CMakeFiles/gllvm.dir/src/APFloat.cpp.o CMakeFiles/gllvm.dir/src/APInt.cpp.o CMakeFiles/gllvm.dir/src/CommandLine.cpp.o CMakeFiles/gllvm.dir/src/SmallPtrSet.cpp.o CMakeFiles/gllvm.dir/src/SmallVector.cpp.o CMakeFiles/gllvm.dir/src/StringMap.cpp.o CMakeFiles/gllvm.dir/src/StringRef.cpp.o CMakeFiles/gllvm.dir/src/Twine.cpp.o
+/usr/bin/ranlib libgllvm.a

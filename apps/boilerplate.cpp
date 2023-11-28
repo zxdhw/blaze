@@ -13,7 +13,7 @@ cll::opt<int>
 
 cll::opt<unsigned int>
     ioBufferSize("ioBufferSize",
-                    cll::desc("IO buffer space size in MB (default: 256)"),
+                    cll::desc("IO buffer space size in MB (default: 1024)"),
                     cll::init(64));
 
 cll::opt<std::string>

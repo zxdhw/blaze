@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/bc_sync.dir/bc_sync.cpp.o CMakeFiles/bc_sync.dir/boilerplate.cpp.o CMakeFiles/bc_sync.dir/__/src/Runtime.cpp.o  -o ../bin/bc_sync  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 

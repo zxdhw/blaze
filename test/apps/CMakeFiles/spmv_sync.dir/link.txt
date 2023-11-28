@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/spmv_sync.dir/spmv_sync.cpp.o CMakeFiles/spmv_sync.dir/boilerplate.cpp.o CMakeFiles/spmv_sync.dir/__/src/Runtime.cpp.o  -o ../bin/spmv_sync  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 
