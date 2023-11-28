@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/bfs.dir/bfs.cpp.o CMakeFiles/bfs.dir/boilerplate.cpp.o CMakeFiles/bfs.dir/__/src/Runtime.cpp.o  -o ../bin/bfs  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 

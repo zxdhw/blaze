@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/wcc_sync.dir/wcc_sync.cpp.o CMakeFiles/wcc_sync.dir/boilerplate.cpp.o CMakeFiles/wcc_sync.dir/__/src/Runtime.cpp.o  -o ../bin/wcc_sync  ../libllvm/libgllvm.a ../libgalois/libgalois_shmem.a -ltcmalloc -lpthread /usr/lib/x86_64-linux-gnu/libnuma.so 
