@@ -11,6 +11,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include <unordered_set>
+#include "bpf/helpers.h"
 
 namespace blaze {
 
@@ -48,6 +49,11 @@ class IoWorker {
         free(_iocb);
         free(_iocbs);
         free(_events);
+    }
+    
+    //load bpf_prog
+    void init_bpf_program(){
+        _bpf_fd = load_bpf_program("/home/femu/blaze/bpf/bfs/bfs_bpf.o");
     }
 
     void run(int fd, bool dense_all, Bitmap* page_bitmap, CountableBag<PAGEID>* sparse_page_frontier,
@@ -325,6 +331,8 @@ class IoWorker {
     struct iocb*                        _iocb;
     struct iocb**                       _iocbs;
     struct io_event*                    _events;
+
+    uint64_t                _bpf_fd;
 };
 
 } // namespace blaze
