@@ -38,6 +38,11 @@ static cll::opt<int>
                 cll::desc("Size of a bin buffer(number of nodes) (default: 128)"),
                 cll::init(BIN_BUF_SIZE));
 
+static cll::opt<int>
+        binBufSize("ebpf",
+                cll::desc("use ebpf ibaio syscall) (default: 0)"),
+                cll::init(USE_EBPF));
+
 static cll::opt<float>
         binningRatio("binningRatio",
                 cll::desc("Binning worker ratio (default: 0.67)"),
@@ -106,7 +111,7 @@ int main(int argc, char **argv) {
     time.start();
 
     while (!frontier->empty()) {
-        Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking);
+        Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking, use_ebpf);
         delete frontier;
         frontier = output;
     }

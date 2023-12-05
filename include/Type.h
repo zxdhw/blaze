@@ -43,6 +43,7 @@ using Mutex = galois::substrate::SimpleLock;
 typedef uint32_t FLAGS;
 const FLAGS no_output           = 0x01;
 const FLAGS prop_blocking       = 0x10;
+const FLAGS use_ebpf            = 0x20;
 
 inline bool should_output(const FLAGS& flags) {
     return !(flags & no_output);
@@ -52,6 +53,9 @@ inline bool use_prop_blocking(const FLAGS& flags) {
     return flags & prop_blocking;
 }
 
+inline bool is_use_ebpf(const FLAGS& flags) {
+    return flags & use_ebpf;
+}
 enum ComputeWorkerRole { NORMAL, BIN, ACCUMULATE };
 
 #endif // BLAZE_TYPES_H

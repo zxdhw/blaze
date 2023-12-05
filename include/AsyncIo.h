@@ -20,6 +20,10 @@ static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
     return syscall(__NR_io_submit, ctx, nr, iocbpp);
 }
 
+static int io_submit_xrp(aio_context_t ctx, long nr, struct iocb **iocbpp) {
+    return syscall(__NR_io_submit_xrp, ctx, nr, iocbpp);
+}
+
 static int io_getevents(aio_context_t ctx, long min_nr, long max_nr,
         struct io_event *events, struct timespec *timeout) {
     return syscall(__NR_io_getevents, ctx, min_nr, max_nr, events, timeout);

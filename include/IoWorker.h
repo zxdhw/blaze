@@ -57,19 +57,23 @@ class IoWorker {
     }
 
     void run(int fd, bool dense_all, Bitmap* page_bitmap, CountableBag<PAGEID>* sparse_page_frontier,
-            Synchronization& sync, IoSync& io_sync) {
+            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
+
+        if(is_use_ebpf(use_ebpf)){
+            init_bpf_program();
+        }
         _fd = fd;
         sync.set_num_free_pages(_id, _num_buffer_pages);
 
         if (dense_all) {
-            run_dense_all(page_bitmap, sync, io_sync);
+            run_dense_all(page_bitmap, sync, io_sync, use_ebpf);
         }
 
         if (sparse_page_frontier) {
-            run_sparse(sparse_page_frontier, page_bitmap, sync, io_sync);
+            run_sparse(sparse_page_frontier, page_bitmap, sync, io_sync, use_ebpf);
 
         } else {
-            run_dense(page_bitmap, sync, io_sync);
+            run_dense(page_bitmap, sync, io_sync, use_ebpf);
         }
     }
 
@@ -87,7 +91,7 @@ class IoWorker {
     }
 
  private:
-    void run_dense_all(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
+    void run_dense_all(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -95,13 +99,13 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_dense_all(beg, end, sync, io_sync);
+            submitTasks_dense_all(beg, end, sync, io_sync,use_ebpf);
             received = receiveTasks(done_tasks);
             dispatchTasks(done_tasks, received);
         }
     }
 
-    void run_dense(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
+    void run_dense(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync,FLAGS& use_ebpf) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -109,13 +113,18 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
+            if(is_use_ebpf(use_ebpf)){
+                submitTasks_dense_ebpf(page_bitmap, beg, end, sync, io_sync, use_ebpf);
+            } else {
+                submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
+            }
             received = receiveTasks(done_tasks);
             dispatchTasks(done_tasks, received);
         }
     }
 
-    void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
+    void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, 
+                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -123,14 +132,18 @@ class IoWorker {
         auto const end = sparse_page_frontier->end();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
+            if(is_use_ebpf(use_ebpf)){
+                submitTasks_sparse_ebpf(beg, end, page_bitmap, sync, io_sync, use_ebpf);
+            } else {
+                submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
+            }
             received = receiveTasks(done_tasks);
             dispatchTasks(done_tasks, received);
         }
     }
 
     void submitTasks_dense_all(PAGEID& beg, const PAGEID& end,
-                            Synchronization& sync, IoSync& io_sync)
+                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf)
     {
         char* buf;
         off_t offset;
@@ -272,6 +285,107 @@ class IoWorker {
         }
     }
 
+    void submitTasks_dense_ebpf(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
+                        Synchronization& sync, IoSync& io_sync,FLAGS& use_ebpf)
+    {
+        char* buf;
+        off_t offset;
+        void* data;
+
+        while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+            // skip an entire word in bitmap if possible
+            // note: this is quite effective to keep IO queue busy
+            if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
+                beg = Bitmap::pos_in_next_word(beg);
+                continue;
+            }
+
+            if (!page_bitmap->get_bit(beg)) {
+                beg++;
+                continue;
+
+            } else {
+                // check continuous pages up to 16kB
+                PAGEID page_id = beg;
+                uint32_t num_pages = 1;
+                while (page_bitmap->get_bit(++beg)
+                             && beg < end 
+                             && num_pages < IO_MAX_PAGES_PER_REQ)
+                {
+                    num_pages++;
+                }
+
+                // wait until free pages are available
+                while (sync.get_num_free_pages(_id) < num_pages) {}
+                sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
+
+                uint32_t len = num_pages * PAGE_SIZE;
+                buf = (char*)aligned_alloc(PAGE_SIZE, len);
+                offset = (uint64_t)page_id * PAGE_SIZE;
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+                enqueueRequest(buf, len, offset, item);
+            }
+        }
+
+        if (beg >= end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+
+        int ret = io_submit(_ctx, _queued - _sent, _iocbs);
+        if (ret > 0) {
+            _sent += ret;
+        }
+    }
+
+    void submitTasks_sparse_ebpf(CountableBag<PAGEID>::iterator& beg,
+                            const CountableBag<PAGEID>::iterator& end,
+                            Bitmap* page_bitmap,
+                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf)
+    {
+        char* buf;
+        off_t offset;
+        void* data;
+        PAGEID page_id;
+
+        while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+            page_id = *beg;
+
+            if (page_bitmap->get_bit(page_id)) {
+                beg++;
+                continue;
+            }
+
+            // wait until free pages are available
+            while (sync.get_num_free_pages(_id) < 1) {}
+            sync.add_num_free_pages(_id, (int64_t)(-1));
+
+            buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+            offset = (uint64_t)page_id * PAGE_SIZE;
+            IoItem* item = new IoItem(_id, page_id, 1, buf);
+            enqueueRequest(buf, PAGE_SIZE, offset, item);
+
+            page_bitmap->set_bit(page_id);
+
+            beg++;
+        }
+
+        if (beg == end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+
+        int ret = io_submit(_ctx, _queued - _sent, _iocbs);
+        if (ret > 0) {
+            _sent += ret;
+        }
+    }
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {
         uint32_t idx = _queued % IO_QUEUE_DEPTH;
         struct iocb* pIocb = &_iocb[idx];
@@ -332,6 +446,7 @@ class IoWorker {
     struct iocb**                       _iocbs;
     struct io_event*                    _events;
 
+    // ebpf 
     uint64_t                _bpf_fd;
 };
 

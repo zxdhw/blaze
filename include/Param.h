@@ -21,5 +21,6 @@
 #define BIN_COUNT               4096//4096
 #define BIN_SHIFT               12
 #define BIN_BUF_SIZE            128
+#define USE_EBPF                0
 
 #endif // BLAZE_PARAM_H

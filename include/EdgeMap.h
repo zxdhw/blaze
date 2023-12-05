@@ -28,7 +28,8 @@ class EdgeMapExecutor {
     EdgeMapExecutor(Gr& graph,
                     Worklist<VID>* frontier,
                     Func&& func,
-                    FLAGS flags)
+                    FLAGS flags,
+                    FLAGS use_ebpf)
         :   _runtime(Runtime::getRuntimeInstance()),
             _graph(graph),
             _out_frontier(nullptr),
@@ -38,6 +39,7 @@ class EdgeMapExecutor {
             _pb_engine(_runtime.getPBEngine()),
             _func(func),
             _flags(flags),
+            _use_ebpf(use_ebpf),
             _work_exists(true),
             _num_activated_nodes(0),
             _num_activated_edges(0),
@@ -120,13 +122,13 @@ class EdgeMapExecutor {
 
         if (use_prop_blocking(_flags)) {
             _pb_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync);
+            _io_time = _io_engine->run(_graph, sync, io_sync,use_ebpf);
             _compute_time = _pb_engine->stop(_graph, _func, sync);
             _out_frontier = _pb_engine->getOutFrontier();
 
         } else {
             _compute_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync);
+            _io_time = _io_engine->run(_graph, sync, io_sync,use_ebpf);
             _compute_time = _compute_engine->stop(_graph);
             _out_frontier = _compute_engine->getOutFrontier();
         }
@@ -277,6 +279,7 @@ class EdgeMapExecutor {
     std::vector<CountableBag<PAGEID>*>     _sparse_page_frontier;  // Page frontier for sparse case
     Func&                       _func;
     FLAGS                       _flags;
+    FLAGS                       _use_ebpf;
     bool                        _work_exists;
     uint64_t                    _num_activated_nodes;
     uint64_t                    _num_activated_edges;
@@ -286,8 +289,8 @@ class EdgeMapExecutor {
 };
 
 template <typename G, typename F>
-Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0) {
-    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags);
+Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS use_ebpf) {
+    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags, use_ebpf);
     executor.run();
     return executor.newFrontier();
 }

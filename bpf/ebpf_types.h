@@ -1,5 +1,5 @@
-#ifndef BFS_TYPES_H
-#define BFS_TYPES_H
+#ifndef EBPF_TYPES_H
+#define EBPF_TYPES_H
 
 
 // #define assert(condition, message) { 
@@ -38,8 +38,8 @@ typedef struct _io_info {
     length_t current_vertex;
 }io_info;
 
-/*BFS:: struct used to communicate with BPF function via scratch buffer */
-typedef struct _BFS {
+/*struct used to communicate with BPF function via scratch buffer */
+typedef struct _Magazine {
     /* io info: (250* 16 + 8)B*/
     /*record which vertex need to traverse (active state)*/
     io_info traversed;
@@ -52,12 +52,12 @@ typedef struct _BFS {
     unsigned long offset;
     unsigned int unused[18];
     
-}BFS;
+}Magazine;
 
-_Static_assert (sizeof(BFS) == SCRATCH_SIZE, "struct Query too large for scratch page");
+_Static_assert (sizeof(Magazine) == SCRATCH_SIZE, "struct too large for scratch page");
 
-static inline BFS new_bfs() {
-    BFS bfs = {
+static inline Magazine new_magazine() {
+    Magazine bfs = {
         .start_vertex = { 0 },
         .degree = {0},
         .offset = {0},
@@ -77,4 +77,4 @@ static inline BFS new_bfs() {
 
 
 
-#endif /* BFS_TYPES_H */
+#endif /* EBPF_TYPES_H */

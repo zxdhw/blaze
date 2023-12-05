@@ -51,7 +51,7 @@ class IoEngine {
     }
 
     template <typename Gr>
-    double run(Gr& graph, Synchronization& sync, IoSync& io_sync) {
+    double run(Gr& graph, Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
         auto time_start = std::chrono::steady_clock::now();
 
         bool dense_all = (_frontier == nullptr);
@@ -66,7 +66,8 @@ class IoEngine {
                                         page_bitmap,
                                         _sparse_page_frontier->size() ? (*_sparse_page_frontier)[i] : nullptr,
                                         std::ref(sync),
-                                        std::ref(io_sync));
+                                        std::ref(io_sync),
+                                        std::ref(use_ebpf));
             _thread_pool.fork(getWorkerTID(i), f);
         }
 

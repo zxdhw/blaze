@@ -6,7 +6,7 @@
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 #include <stdbool.h>
-#include "bfs_types.h"
+#include "bpf/ebpf_types.h"
 
 char LICENSE[] SEC("license") = "GPL";
 
