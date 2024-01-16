@@ -1,0 +1,13 @@
+Number of threads: 17 (Compute 16, IO 1)
+V:       124836180 (37551359, 30.1%)
+E:      1806067135
+bin width: 128 kB
+bin size: 256 MB = 1024 * 256 kB bins
+buffer size: 17408 KB
+# EDGEMAP    1 :    124836180 nodes dense_all,   1806067135 edges,   7224270848 bytes,  2.16887 sec,  2.14833 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# IO SUMMARY    : 7224270848 bytes,  2.14833 sec, 3.13 GB/s
+# SUMMARY       : 1806067135 edges accessed.
+MemoryCounter: 4169 MB -> 6012 MB, 1843 MB total
+STAT_TYPE, REGION, CATEGORY, TOTAL_TYPE, TOTAL
+STAT, SPMV_MAIN, Time, TMAX, 2269
+Bytes read: 7224270848

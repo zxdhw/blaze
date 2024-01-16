@@ -1,0 +1,54 @@
+Number of threads: 17 (Compute 16, IO 1)
+V:       134217728 (134217712, 100.0%)
+E:      2147483488
+V:       134217728 (134217712, 100.0%)
+E:      2147483488
+bin width: 128 kB
+bin size: 256 MB = 1024 * 256 kB bins
+buffer size: 17408 KB
+# EDGEMAP    1 :            1 nodes    sparse,           21 edges,         4096 bytes,  0.00372 sec,  0.00014 sec (bin: 1.22, acc: 6.00) (io: 1.00)
+# EDGEMAP    2 :           21 nodes    sparse,          348 edges,        86016 bytes,  0.00406 sec,  0.00026 sec (bin: 1.53, acc: 3.67) (io: 1.00)
+# EDGEMAP    3 :          327 nodes    sparse,         5513 edges,      1355776 bytes,  0.00671 sec,  0.00248 sec (bin: 1.03, acc: 1.95) (io: 1.00)
+# EDGEMAP    4 :         5186 nodes    sparse,        87981 edges,     21520384 bytes,  0.02027 sec,  0.01681 sec (bin: 1.00, acc: 1.09) (io: 1.00)
+# EDGEMAP    5 :        82765 nodes    sparse,      1404728 edges,    337915904 bytes,  0.19012 sec,  0.18394 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    6 :      1314522 nodes     dense,     22336348 edges,   4063211520 bytes,  1.37591 sec,  1.36314 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    7 :     19262086 nodes     dense,    325778725 edges,   8589537280 bytes,  1.18046 sec,  1.16560 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    8 :    102130777 nodes     dense,   1643234572 edges,   8589934592 bytes,  1.55019 sec,  1.51628 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    9 :     11421980 nodes     dense,    154635170 edges,   8559702016 bytes,  1.16200 sec,  1.16082 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   10 :           47 nodes    sparse,           82 edges,       192512 bytes,  0.00159 sec,  0.00042 sec (bin: 1.02, acc: 1.01) (io: 1.00)
+# EDGEMAP   11 :           47 nodes    sparse,           82 edges,       192512 bytes,  0.00057 sec,  0.00044 sec (bin: 1.21, acc: 1.02) (io: 1.00)
+# EDGEMAP   12 :     11421980 nodes     dense,    154635170 edges,   8559702016 bytes,  1.16633 sec,  1.16037 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   13 :    102130777 nodes     dense,   1643234572 edges,   8589934592 bytes,  1.86394 sec,  1.81544 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP   14 :     19262086 nodes     dense,    325778725 edges,   8589537280 bytes,  1.16673 sec,  1.16309 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   15 :      1314522 nodes     dense,     22336348 edges,   4063211520 bytes,  1.40386 sec,  1.40253 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   16 :        82765 nodes    sparse,      1404728 edges,    337915904 bytes,  0.18673 sec,  0.18619 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   17 :         5186 nodes    sparse,        87981 edges,     21520384 bytes,  0.01230 sec,  0.01187 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   18 :          327 nodes    sparse,         5513 edges,      1355776 bytes,  0.00120 sec,  0.00078 sec (bin: 1.07, acc: 1.01) (io: 1.00)
+# EDGEMAP   19 :           21 nodes    sparse,          348 edges,        86016 bytes,  0.00046 sec,  0.00009 sec (bin: 1.28, acc: 1.02) (io: 1.00)
+Rank BetweennessCentrality Id
+  1: 127126832.0000000000          0
+  2:  93784728.0000000000  125093057
+  3:  79551696.0000000000   86790574
+  4:  71282720.0000000000  133076785
+  5:  70555360.0000000000   86364056
+  6:  69979656.0000000000   77394182
+  7:  68473000.0000000000  109716228
+  8:  66755236.0000000000   53390371
+  9:  64317384.0000000000   64764501
+ 10:  63174476.0000000000   64889445
+ 11:  60830080.0000000000   30303523
+ 12:  60811188.0000000000   53579654
+ 13:  55602404.0000000000   16459757
+ 14:  55131260.0000000000   14571172
+ 15:  53064000.0000000000   40782998
+ 16:  51986360.0000000000   72706136
+ 17:  51543744.0000000000   50206206
+ 18:  50947820.0000000000   33360373
+ 19:  48518328.0000000000  125662322
+ 20:  45766256.0000000000   43348321
+# IO SUMMARY    : 60326916096 bytes, 11.15069 sec, 5.04 GB/s
+# SUMMARY       : 4294966955 edges accessed.
+MemoryCounter: 4168 MB -> 7643 MB, 3474 MB total
+STAT_TYPE, REGION, CATEGORY, TOTAL_TYPE, TOTAL
+STAT, BC_MAIN, Time, TMAX, 12343
+Bytes read: 60326916096

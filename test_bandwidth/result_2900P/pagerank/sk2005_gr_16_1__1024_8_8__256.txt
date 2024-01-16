@@ -1,0 +1,70 @@
+Number of threads: 17 (Compute 16, IO 1)
+V:        50636154 (43732622, 86.4%)
+E:      1949412601
+bin width: 64 kB
+bin size: 256 MB = 1024 * 256 kB bins
+buffer size: 17408 KB
+# EDGEMAP    1 :     43732622 nodes     dense,   1949412601 edges,   7797653504 bytes,  1.44810 sec,  1.41375 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    2 :     43457609 nodes     dense,   1904716969 edges,   7635709952 bytes,  1.43477 sec,  1.39529 sec (bin: 1.03, acc: 1.00) (io: 1.00)
+# EDGEMAP    3 :     42623841 nodes     dense,   1880857076 edges,   7614275584 bytes,  1.41026 sec,  1.37236 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    4 :     32074780 nodes     dense,   1349782951 edges,   6940831744 bytes,  1.05269 sec,  1.02658 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    5 :     23855740 nodes     dense,    975532143 edges,   6092959744 bytes,  0.93605 sec,  0.90828 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    6 :     16652092 nodes     dense,    623694512 edges,   4962426880 bytes,  0.89996 sec,  0.88990 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP    7 :     12746466 nodes     dense,    481214032 edges,   4229414912 bytes,  0.84319 sec,  0.83409 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP    8 :      8820528 nodes     dense,    340612061 edges,   3505627136 bytes,  0.79253 sec,  0.78600 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    9 :      6343714 nodes     dense,    255176896 edges,   2885726208 bytes,  0.70287 sec,  0.69930 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   10 :      4274414 nodes     dense,    185354150 edges,   2306670592 bytes,  0.61052 sec,  0.60670 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   11 :      2402603 nodes     dense,    101003447 edges,   1599918080 bytes,  0.48222 sec,  0.47969 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   12 :      1126321 nodes     dense,     36925207 edges,    700112896 bytes,  0.21711 sec,  0.21483 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   13 :       556458 nodes     dense,     11221630 edges,    251834368 bytes,  0.08975 sec,  0.08830 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   14 :       382377 nodes    sparse,      4921713 edges,    107737088 bytes,  0.05815 sec,  0.05718 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   15 :       205850 nodes    sparse,      2523141 edges,     62959616 bytes,  0.03745 sec,  0.03694 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   16 :       186150 nodes    sparse,      1618072 edges,     48005120 bytes,  0.03044 sec,  0.02999 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   17 :       209599 nodes    sparse,       979433 edges,     33214464 bytes,  0.02406 sec,  0.02370 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   18 :       127871 nodes    sparse,       688884 edges,     26091520 bytes,  0.02078 sec,  0.02051 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   19 :       118466 nodes    sparse,       453467 edges,     17854464 bytes,  0.01547 sec,  0.01523 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   20 :        95202 nodes    sparse,       321171 edges,     14884864 bytes,  0.01475 sec,  0.01452 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   21 :       103835 nodes    sparse,       348941 edges,     13361152 bytes,  0.01417 sec,  0.01397 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   22 :        82549 nodes    sparse,       240126 edges,     11341824 bytes,  0.01164 sec,  0.01141 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   23 :        96058 nodes    sparse,       283031 edges,     10653696 bytes,  0.01112 sec,  0.01092 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   24 :        72260 nodes    sparse,       189000 edges,      8982528 bytes,  0.01002 sec,  0.00984 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   25 :        70572 nodes    sparse,       198800 edges,      8208384 bytes,  0.00995 sec,  0.00975 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   26 :        83337 nodes    sparse,       247703 edges,      7704576 bytes,  0.00877 sec,  0.00858 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   27 :        59091 nodes    sparse,       155291 edges,      6139904 bytes,  0.00926 sec,  0.00910 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   28 :        56429 nodes    sparse,       146979 edges,      5214208 bytes,  0.00678 sec,  0.00663 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   29 :        52552 nodes    sparse,       135317 edges,      4571136 bytes,  0.00636 sec,  0.00623 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   30 :        45414 nodes    sparse,       123876 edges,      3780608 bytes,  0.00586 sec,  0.00574 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP   31 :        38354 nodes    sparse,       105128 edges,      2953216 bytes,  0.00463 sec,  0.00450 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP   32 :        20080 nodes    sparse,        58554 edges,      2023424 bytes,  0.00323 sec,  0.00308 sec (bin: 1.03, acc: 1.00) (io: 1.00)
+# EDGEMAP   33 :         7192 nodes    sparse,        25052 edges,       811008 bytes,  0.00137 sec,  0.00127 sec (bin: 1.05, acc: 1.01) (io: 1.00)
+# EDGEMAP   34 :         2614 nodes    sparse,        10189 edges,       290816 bytes,  0.00056 sec,  0.00048 sec (bin: 1.12, acc: 1.02) (io: 1.00)
+# EDGEMAP   35 :          821 nodes    sparse,          865 edges,        81920 bytes,  0.00022 sec,  0.00018 sec (bin: 1.16, acc: 1.04) (io: 1.00)
+# EDGEMAP   36 :           37 nodes    sparse,         2183 edges,        69632 bytes,  0.00020 sec,  0.00016 sec (bin: 1.12, acc: 1.05) (io: 1.00)
+# EDGEMAP   37 :           17 nodes    sparse,          761 edges,        20480 bytes,  0.00011 sec,  0.00007 sec (bin: 1.40, acc: 1.10) (io: 1.00)
+Rank PageRank Id
+  1:         0.0040154601   42265165
+  2:         0.0014139937   39117350
+  3:         0.0011182553   49824797
+  4:         0.0010261806   50284700
+  5:         0.0006307664    1025424
+  6:         0.0006259828   19586088
+  7:         0.0005182518   19586089
+  8:         0.0004888841   43675432
+  9:         0.0004845868   41317244
+ 10:         0.0004827177    1053560
+ 11:         0.0004021631   41317356
+ 12:         0.0003909424   41281079
+ 13:         0.0003791543   37247793
+ 14:         0.0003763509   20920301
+ 15:         0.0003702080   17866472
+ 16:         0.0003541088   41317352
+ 17:         0.0003541043   41317343
+ 18:         0.0003540959   41317355
+ 19:         0.0003540940   41317350
+ 20:         0.0003540940   41317353
+# IO SUMMARY    : 56920117248 bytes, 11.01509 sec, 4.81 GB/s
+# SUMMARY       : 10109281352 edges accessed.
+MemoryCounter: 4169 MB -> 5412 MB, 1243 MB total
+STAT_TYPE, REGION, CATEGORY, TOTAL_TYPE, TOTAL
+STAT, PAGERANK_MAIN, Time, TMAX, 12522
+Bytes read: 56920117248

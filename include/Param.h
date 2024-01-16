@@ -6,7 +6,7 @@
 // IO
 #define PAGE_SIZE               4096
 #define PAGE_SHIFT              12
-#define IO_QUEUE_DEPTH          64
+#define IO_QUEUE_DEPTH          128 //64
 #define IO_MAX_PAGES_PER_REQ    4
 
 // IO page queue
