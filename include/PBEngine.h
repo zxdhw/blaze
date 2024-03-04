@@ -154,6 +154,46 @@ class PBEngine {
         return max_time / min_time;
     }
 
+    double getTotalGatherTime() {
+        double time = 0;
+
+        for (int i = 0; i < _gather_workers.size(); i++) {
+            time += _gather_workers[i]->getTime();
+
+        }
+        return time;
+    }
+
+    double getGatherTime() {
+        double time = 0;
+
+        for (int i = 0; i < _gather_workers.size(); i++) {
+            time += _gather_workers[i]->getGatherTime();
+
+        }
+        return time;
+    }
+
+    double getTotalScatterTime() {
+        double time = 0;
+
+        for (int i = 0; i < _scatter_workers.size(); i++) {
+            time += _scatter_workers[i]->getTime();
+
+        }
+       return time;
+    }
+
+    double getScatterTime() {
+        double time = 0;
+
+        for (int i = 0; i < _scatter_workers.size(); i++) {
+            time += _scatter_workers[i]->getScatterTime();
+        }
+
+        return time;
+    }
+
     void printStat() const {
         double min_time, max_time, time, gap;
 

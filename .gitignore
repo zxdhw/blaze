@@ -1,1 +1,7 @@
-build
+# 过滤build
+build/
+# 过滤test，但是保留sh和py文件
+test/
+!test/**/*.sh
+!test/**/*.py
+

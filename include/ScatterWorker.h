@@ -21,7 +21,8 @@ class ScatterWorker {
             _in_frontier(nullptr),
             _bins(nullptr),
             _time(0.0),
-            _num_processed_pages(0)
+            _num_processed_pages(0),
+            _scatter_time(0.0)
     {}
 
     ~ScatterWorker() {}
@@ -78,6 +79,10 @@ class ScatterWorker {
     double getTime() const {
         return _time;
     }
+    
+    double getScatterTime() const {
+        return _scatter_time;
+    }
 
     int getId() const {
         return _id;
@@ -119,6 +124,9 @@ class ScatterWorker {
 
     template <typename Gr, typename Func>
     void processFetchedPages(Gr& graph, Func& func, IoItem& item, Synchronization& sync) {
+        //zhengxd: poll
+        auto scatter_time_start = std::chrono::steady_clock::now();
+
         PAGEID ppid_start = item.page;
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
@@ -131,6 +139,11 @@ class ScatterWorker {
         _num_processed_pages += item.num;
         free(item.buf);
         sync.add_num_free_pages(item.disk_id, item.num);
+                            
+        //zhengxd: poll
+        auto scatter_time_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = scatter_time_end - scatter_time_start;
+        _scatter_time += elapsed.count();
     }
 
     template <typename Gr, typename Func>
@@ -157,6 +170,7 @@ class ScatterWorker {
     Bins*                   _bins;
     double                  _time;
     uint64_t                _num_processed_pages;
+    double                  _scatter_time;
 };
 
 } // namespace blaze
