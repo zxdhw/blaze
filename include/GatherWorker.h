@@ -14,7 +14,8 @@ class GatherWorker {
     GatherWorker(int id)
         :   _id(id),
             _time(0.0),
-            _out_frontier(nullptr)
+            _out_frontier(nullptr),
+            _gather_time(0.0)
     {}
 
     ~GatherWorker() {}
@@ -28,7 +29,8 @@ class GatherWorker {
         Bin *full_bin = bins->get_full_bin();
         if (!full_bin)
             return false;
-
+        // zhengxd: poll, gather time start
+        auto gather_time_start = std::chrono::steady_clock::now();
         uint64_t *bin = full_bin->get_bin();
         uint64_t bin_size = full_bin->get_size();
         int idx = full_bin->get_idx();
@@ -49,7 +51,10 @@ class GatherWorker {
         }
 
         full_bin->reset();
-
+        // zhengxd: poll, gather time end
+        auto gather_time_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = gather_time_end - gather_time_start;
+        _gather_time += elapsed.count();
         return true;
     }
 
@@ -86,6 +91,10 @@ class GatherWorker {
         return _time;
     }
 
+    double getGatherTime() const {
+        return _gather_time;
+    }
+
     int getId() const {
         return _id;
     }
@@ -94,6 +103,7 @@ class GatherWorker {
     int                     _id;
     double                  _time;
     Worklist<VID>*          _out_frontier;
+    double                  _gather_time;
 };
 
 } // namespace blaze

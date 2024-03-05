@@ -6,7 +6,7 @@
 // IO
 #define PAGE_SIZE               4096
 #define PAGE_SHIFT              12
-#define IO_QUEUE_DEPTH          128 //64
+#define IO_QUEUE_DEPTH          64
 #define IO_MAX_PAGES_PER_REQ    4
 
 // IO page queue
@@ -17,7 +17,7 @@
 #define DENSE_THRESHOLD         0.005
 
 // Binning
-#define BINNING_WORKER_RATIO    0.67
+#define BINNING_WORKER_RATIO    0.5 //0.67
 #define BIN_COUNT               4096
 #define BIN_SHIFT               12
 #define BIN_BUF_SIZE            128

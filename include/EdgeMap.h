@@ -140,7 +140,7 @@ class EdgeMapExecutor {
         }
 
         print();
-
+        // _pb_engine->printStat();
         _io_engine->initState();
     }
 
@@ -179,6 +179,18 @@ class EdgeMapExecutor {
             std::cout << ", acc: ";
             std::cout << std::fixed << std::setprecision(2) << acc_skew;
             std::cout << ")";
+        }
+        //zhengxd: poll
+        if(_pb_engine){
+            double total_gather = _pb_engine->getTotalGatherTime();
+            double total_scatter = _pb_engine->getTotalScatterTime();     
+            double gather = _pb_engine->getGatherTime();
+            double scatter = _pb_engine->getScatterTime();
+            
+            _runtime.addTotalGatherTime(total_gather);
+            _runtime.addTotalScatterTime(total_scatter);
+            _runtime.addGatherTime(gather);
+            _runtime.addScatterTime(scatter);
         }
 
         if (_io_engine) {
