@@ -1,2 +1,0 @@
-sudo /home/zhengxd/blaze/build/bin/bfs -computeWorkers 7 -startNode 0 /home/zhengxd/dataset/mnt/nvme1/rmat27.gr.index /home/zhengxd/dataset/mnt/nvme1/rmat27.gr.adj.0
-# sudo /home/zhengxd/blaze/build/bin/bfs -computeWorkers 16 -startNode 0 /home/zhengxd/dataset/mnt/nvme2/rmat27.gr.index /home/zhengxd/dataset/mnt/nvme2/rmat27.gr.adj.0

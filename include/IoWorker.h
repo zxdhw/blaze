@@ -218,6 +218,7 @@ class IoWorker {
         if (ret > 0) {
             _sent += ret;
         }
+        printf("ret: %d",ret);
     }
 
     void submitTasks_sparse(CountableBag<PAGEID>::iterator& beg,
@@ -264,6 +265,7 @@ class IoWorker {
         if (ret > 0) {
             _sent += ret;
         }
+        printf("ret: %d",ret);
     }
 
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {

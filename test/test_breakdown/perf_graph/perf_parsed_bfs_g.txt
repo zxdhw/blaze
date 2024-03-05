@@ -1,0 +1,1345 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 19  of event 'instructions'
+# Event count (approx.): 373572101
+#
+# Children      Self       Samples  Symbol                                  IPC   [IPC Coverage]
+# ........  ........  ............  ......................................  ....................
+#
+    33.35%    33.35%             1  [.] 0x00000000004e713f                  -      -            
+            |
+            ---0x4e713f
+
+    33.35%     0.00%             0  [.] 0x00000000008fa5a0                  -      -            
+            |
+            ---0x4e713f
+
+    24.65%    24.65%             1  [.] 0x00007fd4ebda599c                  -      -            
+            |
+            ---0x7fd4ebda599c
+
+    24.65%     0.00%             0  [.] 0x000053047c047d00                  -      -            
+            |
+            ---0x7fd4ebda599c
+
+    23.12%    23.12%             1  [.] 0x00000000005b9870                  -      -            
+    17.62%    17.62%             1  [.] 0x00000000004c4cf0                  -      -            
+            |
+            ---0x4c4cf0
+
+    17.62%     0.00%             0  [.] 0x00007fd4e9b79b30                  -      -            
+            |
+            ---0x4c4cf0
+
+     0.95%     0.95%             1  [.] 0x00000000004d8638                  -      -            
+            |
+            ---0x7fd4ea9095b0
+               0x4d8638
+
+     0.95%     0.00%             0  [.] 0x0000000000000006                  -      -            
+            |
+            ---0x7fd4ea9095b0
+               0x4d8638
+
+     0.95%     0.00%             0  [.] 0x00007fd4ea9095b0                  -      -            
+            |
+            ---0x4d8638
+
+     0.14%     0.05%             3  [k] update_sd_lb_stats.constprop.0      -      -            
+            |          
+            |--4--update_sd_lb_stats.constprop.0
+            |          |          
+            |          |--3--idle_cpu
+            |          |          
+            |           --1--_find_next_bit
+            |          
+            |--2--ret_from_fork
+            |          kthread
+            |          worker_thread
+            |          schedule
+            |          __sched_text_start
+            |          pick_next_task
+            |          pick_next_task_fair
+            |          newidle_balance
+            |          load_balance
+            |          find_busiest_group
+            |          update_sd_lb_stats.constprop.0
+            |          
+             --1--secondary_startup_64_no_verify
+                       start_secondary
+                       cpu_startup_entry
+                       do_idle
+                       call_cpuidle
+                       cpuidle_enter
+                       cpuidle_enter_state
+                       acpi_idle_enter
+                       native_safe_halt
+                       asm_sysvec_apic_timer_interrupt
+                       sysvec_apic_timer_interrupt
+                       irq_exit_rcu
+                       __softirqentry_text_start
+                       run_rebalance_domains
+                       rebalance_domains
+                       load_balance
+                       find_busiest_group
+                       update_sd_lb_stats.constprop.0
+
+     0.14%     0.00%             0  [k] load_balance                        -      -            
+            |
+            ---find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.14%     0.00%             0  [k] find_busiest_group                  -      -            
+            |
+            ---update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.12%     0.00%             0  [k] schedule                            -      -            
+            |
+            ---__sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.12%     0.00%             0  [k] __sched_text_start                  -      -            
+            |
+            ---pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.12%     0.00%             0  [k] pick_next_task                      -      -            
+            |
+            ---pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.12%     0.00%             0  [k] pick_next_task_fair                 -      -            
+            |
+            ---newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.12%     0.00%             0  [k] newidle_balance                     -      -            
+            |
+            ---load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--3--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.09%     0.00%             0  [k] ret_from_fork                       -      -            
+            |
+            ---kthread
+               worker_thread
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--2--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.09%     0.00%             0  [k] kthread                             -      -            
+            |
+            ---worker_thread
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--2--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.09%     0.00%             0  [k] worker_thread                       -      -            
+            |
+            ---schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               |          
+               |--2--idle_cpu
+               |          
+                --1--_find_next_bit
+
+     0.09%     0.00%             0  [k] secondary_startup_64_no_verify      -      -            
+            |
+            ---start_secondary
+               cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] start_secondary                     -      -            
+            |
+            ---cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] cpu_startup_entry                   -      -            
+            |
+            ---do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] do_idle                             -      -            
+            |
+            ---call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] call_cpuidle                        -      -            
+            |
+            ---cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] cpuidle_enter                       -      -            
+            |
+            ---cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] cpuidle_enter_state                 -      -            
+            |
+            ---acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] acpi_idle_enter                     -      -            
+            |
+            ---native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] native_safe_halt                    -      -            
+            |
+            ---asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] asm_sysvec_apic_timer_interrupt     -      -            
+            |
+            ---sysvec_apic_timer_interrupt
+               |          
+               |--4--irq_exit_rcu
+               |          __softirqentry_text_start
+               |          run_rebalance_domains
+               |          |          
+               |          |--3--update_blocked_averages
+               |          |          |          
+               |          |          |--2--update_load_avg
+               |          |          |          |          
+               |          |          |          |--1--dbs_update_util_handler
+               |          |          |          |          
+               |          |          |           --1--__update_load_avg_se
+               |          |          |          
+               |          |           --1--update_rt_rq_load_avg
+               |          |          
+               |           --1--rebalance_domains
+               |                     load_balance
+               |                     find_busiest_group
+               |                     update_sd_lb_stats.constprop.0
+               |          
+                --1--__sysvec_apic_timer_interrupt
+                          hrtimer_interrupt
+                          __hrtimer_run_queues
+                          tick_sched_timer
+                          hrtimer_forward
+
+     0.09%     0.00%             0  [k] sysvec_apic_timer_interrupt         -      -            
+            |          
+            |--4--irq_exit_rcu
+            |          __softirqentry_text_start
+            |          run_rebalance_domains
+            |          |          
+            |          |--3--update_blocked_averages
+            |          |          |          
+            |          |          |--2--update_load_avg
+            |          |          |          |          
+            |          |          |          |--1--dbs_update_util_handler
+            |          |          |          |          
+            |          |          |           --1--__update_load_avg_se
+            |          |          |          
+            |          |           --1--update_rt_rq_load_avg
+            |          |          
+            |           --1--rebalance_domains
+            |                     load_balance
+            |                     find_busiest_group
+            |                     update_sd_lb_stats.constprop.0
+            |          
+             --1--__sysvec_apic_timer_interrupt
+                       hrtimer_interrupt
+                       __hrtimer_run_queues
+                       tick_sched_timer
+                       hrtimer_forward
+
+     0.08%     0.08%             3  [k] idle_cpu                            -      -            
+            |          
+            |--2--ret_from_fork
+            |          kthread
+            |          worker_thread
+            |          schedule
+            |          __sched_text_start
+            |          pick_next_task
+            |          pick_next_task_fair
+            |          newidle_balance
+            |          load_balance
+            |          find_busiest_group
+            |          update_sd_lb_stats.constprop.0
+            |          idle_cpu
+            |          
+             --1--0
+                       0x7f6e10474376
+                       entry_SYSCALL_64_after_hwframe
+                       do_syscall_64
+                       syscall_exit_to_user_mode
+                       exit_to_user_mode_prepare
+                       arch_do_signal_or_restart
+                       get_signal
+                       do_group_exit
+                       do_exit
+                       schedule
+                       __sched_text_start
+                       pick_next_task
+                       pick_next_task_fair
+                       newidle_balance
+                       load_balance
+                       find_busiest_group
+                       update_sd_lb_stats.constprop.0
+                       idle_cpu
+
+     0.07%     0.00%             0  [k] irq_exit_rcu                        -      -            
+            |
+            ---__softirqentry_text_start
+               run_rebalance_domains
+               |          
+               |--3--update_blocked_averages
+               |          |          
+               |          |--2--update_load_avg
+               |          |          |          
+               |          |          |--1--dbs_update_util_handler
+               |          |          |          
+               |          |           --1--__update_load_avg_se
+               |          |          
+               |           --1--update_rt_rq_load_avg
+               |          
+                --1--rebalance_domains
+                          load_balance
+                          find_busiest_group
+                          update_sd_lb_stats.constprop.0
+
+     0.07%     0.00%             0  [k] __softirqentry_text_start           -      -            
+            |
+            ---run_rebalance_domains
+               |          
+               |--3--update_blocked_averages
+               |          |          
+               |          |--2--update_load_avg
+               |          |          |          
+               |          |          |--1--dbs_update_util_handler
+               |          |          |          
+               |          |           --1--__update_load_avg_se
+               |          |          
+               |           --1--update_rt_rq_load_avg
+               |          
+                --1--rebalance_domains
+                          load_balance
+                          find_busiest_group
+                          update_sd_lb_stats.constprop.0
+
+     0.07%     0.00%             0  [k] run_rebalance_domains               -      -            
+            |          
+            |--3--update_blocked_averages
+            |          |          
+            |          |--2--update_load_avg
+            |          |          |          
+            |          |          |--1--dbs_update_util_handler
+            |          |          |          
+            |          |           --1--__update_load_avg_se
+            |          |          
+            |           --1--update_rt_rq_load_avg
+            |          
+             --1--rebalance_domains
+                       load_balance
+                       find_busiest_group
+                       update_sd_lb_stats.constprop.0
+
+     0.05%     0.00%             0  [k] update_blocked_averages             -      -            
+            |          
+            |--2--update_load_avg
+            |          |          
+            |          |--1--dbs_update_util_handler
+            |          |          
+            |           --1--__update_load_avg_se
+            |          
+             --1--update_rt_rq_load_avg
+
+     0.05%     0.05%             1  [.] 0x0000000000516658                  -      -            
+            |
+            ---0x516658
+
+     0.05%     0.00%             0  [.] 0x00000000008f59c0                  -      -            
+            |
+            ---0x516658
+
+     0.05%     0.05%             1  [.] 0x00000000005167a5                  -      -            
+     0.04%     0.00%             0  [k] update_load_avg                     -      -            
+            |          
+            |--1--dbs_update_util_handler
+            |          
+             --1--__update_load_avg_se
+
+     0.03%     0.00%             0  [k] entry_SYSCALL_64_after_hwframe      -      -            
+            |
+            ---do_syscall_64
+               |          
+               |--1--syscall_exit_to_user_mode
+               |          exit_to_user_mode_prepare
+               |          arch_do_signal_or_restart
+               |          get_signal
+               |          do_group_exit
+               |          do_exit
+               |          schedule
+               |          __sched_text_start
+               |          pick_next_task
+               |          pick_next_task_fair
+               |          newidle_balance
+               |          load_balance
+               |          find_busiest_group
+               |          update_sd_lb_stats.constprop.0
+               |          idle_cpu
+               |          
+                --1--__x64_sys_ioctl
+                          perf_ioctl
+                          _perf_ioctl
+                          perf_event_for_each_child
+                          _perf_event_enable
+                          event_function_call
+                          smp_call_function_single
+                          generic_exec_single
+                          remote_function
+                          event_function
+                          __perf_event_enable
+                          ctx_resched
+                          perf_pmu_enable.part.0
+                          x86_pmu_enable
+                          intel_pmu_enable_all
+                          __intel_pmu_enable_all.constprop.0
+
+     0.03%     0.00%             0  [k] do_syscall_64                       -      -            
+            |          
+            |--1--syscall_exit_to_user_mode
+            |          exit_to_user_mode_prepare
+            |          arch_do_signal_or_restart
+            |          get_signal
+            |          do_group_exit
+            |          do_exit
+            |          schedule
+            |          __sched_text_start
+            |          pick_next_task
+            |          pick_next_task_fair
+            |          newidle_balance
+            |          load_balance
+            |          find_busiest_group
+            |          update_sd_lb_stats.constprop.0
+            |          idle_cpu
+            |          
+             --1--__x64_sys_ioctl
+                       perf_ioctl
+                       _perf_ioctl
+                       perf_event_for_each_child
+                       _perf_event_enable
+                       event_function_call
+                       smp_call_function_single
+                       generic_exec_single
+                       remote_function
+                       event_function
+                       __perf_event_enable
+                       ctx_resched
+                       perf_pmu_enable.part.0
+                       x86_pmu_enable
+                       intel_pmu_enable_all
+                       __intel_pmu_enable_all.constprop.0
+
+     0.03%     0.00%             0  [k] 0000000000000000                    -      -            
+            |
+            ---0x7f6e10474376
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               syscall_exit_to_user_mode
+               exit_to_user_mode_prepare
+               arch_do_signal_or_restart
+               get_signal
+               do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] 0x00007f6e10474376                  -      -            
+            |
+            ---entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               syscall_exit_to_user_mode
+               exit_to_user_mode_prepare
+               arch_do_signal_or_restart
+               get_signal
+               do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] syscall_exit_to_user_mode           -      -            
+            |
+            ---exit_to_user_mode_prepare
+               arch_do_signal_or_restart
+               get_signal
+               do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] exit_to_user_mode_prepare           -      -            
+            |
+            ---arch_do_signal_or_restart
+               get_signal
+               do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] arch_do_signal_or_restart           -      -            
+            |
+            ---get_signal
+               do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] get_signal                          -      -            
+            |
+            ---do_group_exit
+               do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] do_group_exit                       -      -            
+            |
+            ---do_exit
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.03%     0.00%             0  [k] do_exit                             -      -            
+            |
+            ---schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               idle_cpu
+
+     0.02%     0.00%             0  [k] rebalance_domains                   -      -            
+            |
+            ---load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+
+     0.02%     0.02%             1  [k] dbs_update_util_handler             -      -            
+            |
+            ---start_secondary
+               cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               irq_exit_rcu
+               __softirqentry_text_start
+               run_rebalance_domains
+               update_blocked_averages
+               update_load_avg
+               dbs_update_util_handler
+
+     0.02%     0.02%             1  [k] update_rt_rq_load_avg               -      -            
+            |
+            ---start_secondary
+               cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               irq_exit_rcu
+               __softirqentry_text_start
+               run_rebalance_domains
+               update_blocked_averages
+               update_rt_rq_load_avg
+
+     0.02%     0.02%             1  [k] _find_next_bit                      -      -            
+            |
+            ---kthread
+               worker_thread
+               schedule
+               __sched_text_start
+               pick_next_task
+               pick_next_task_fair
+               newidle_balance
+               load_balance
+               find_busiest_group
+               update_sd_lb_stats.constprop.0
+               _find_next_bit
+
+     0.02%     0.02%             1  [k] __update_load_avg_se                -      -            
+            |
+            ---start_secondary
+               cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               irq_exit_rcu
+               __softirqentry_text_start
+               run_rebalance_domains
+               update_blocked_averages
+               update_load_avg
+               __update_load_avg_se
+
+     0.02%     0.02%             1  [k] hrtimer_forward                     -      -            
+            |
+            ---start_secondary
+               cpu_startup_entry
+               do_idle
+               call_cpuidle
+               cpuidle_enter
+               cpuidle_enter_state
+               acpi_idle_enter
+               native_safe_halt
+               asm_sysvec_apic_timer_interrupt
+               sysvec_apic_timer_interrupt
+               __sysvec_apic_timer_interrupt
+               hrtimer_interrupt
+               __hrtimer_run_queues
+               tick_sched_timer
+               hrtimer_forward
+
+     0.02%     0.00%             0  [k] __sysvec_apic_timer_interrupt       -      -            
+            |
+            ---hrtimer_interrupt
+               __hrtimer_run_queues
+               tick_sched_timer
+               hrtimer_forward
+
+     0.02%     0.00%             0  [k] hrtimer_interrupt                   -      -            
+            |
+            ---__hrtimer_run_queues
+               tick_sched_timer
+               hrtimer_forward
+
+     0.02%     0.00%             0  [k] __hrtimer_run_queues                -      -            
+            |
+            ---tick_sched_timer
+               hrtimer_forward
+
+     0.02%     0.00%             0  [k] tick_sched_timer                    -      -            
+            |
+            ---hrtimer_forward
+
+     0.00%     0.00%             1  [k] __intel_pmu_enable_all.constprop.0  -      -            
+            |
+            ---main
+               run_builtin
+               cmd_record
+               __evlist__enable
+               __GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] __libc_start_main                   -      -            
+            |
+            ---main
+               run_builtin
+               cmd_record
+               __evlist__enable
+               __GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] main                                -      -            
+            |
+            ---run_builtin
+               cmd_record
+               __evlist__enable
+               __GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] run_builtin                         -      -            
+            |
+            ---cmd_record
+               __evlist__enable
+               __GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] cmd_record                          -      -            
+            |
+            ---__evlist__enable
+               __GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] __evlist__enable                    -      -            
+            |
+            ---__GI___ioctl
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [.] __GI___ioctl                        -      -            
+            |
+            ---entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               __x64_sys_ioctl
+               perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] __x64_sys_ioctl                     -      -            
+            |
+            ---perf_ioctl
+               _perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] perf_ioctl                          -      -            
+            |
+            ---_perf_ioctl
+               perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] _perf_ioctl                         -      -            
+            |
+            ---perf_event_for_each_child
+               _perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] perf_event_for_each_child           -      -            
+            |
+            ---_perf_event_enable
+               event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] _perf_event_enable                  -      -            
+            |
+            ---event_function_call
+               smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] event_function_call                 -      -            
+            |
+            ---smp_call_function_single
+               generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] smp_call_function_single            -      -            
+            |
+            ---generic_exec_single
+               remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] generic_exec_single                 -      -            
+            |
+            ---remote_function
+               event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] remote_function                     -      -            
+            |
+            ---event_function
+               __perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] event_function                      -      -            
+            |
+            ---__perf_event_enable
+               ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] __perf_event_enable                 -      -            
+            |
+            ---ctx_resched
+               perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] ctx_resched                         -      -            
+            |
+            ---perf_pmu_enable.part.0
+               x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] perf_pmu_enable.part.0              -      -            
+            |
+            ---x86_pmu_enable
+               intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] x86_pmu_enable                      -      -            
+            |
+            ---intel_pmu_enable_all
+               __intel_pmu_enable_all.constprop.0
+
+     0.00%     0.00%             0  [k] intel_pmu_enable_all                -      -            
+            |
+            ---__intel_pmu_enable_all.constprop.0
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

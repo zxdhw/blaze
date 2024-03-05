@@ -1,0 +1,40 @@
+Number of threads: 17 (Compute 16, IO 1)
+V:       134217728 (134217712, 100.0%)
+E:      2147483488
+bin width: 128 kB
+bin size: 256 MB = 1024 * 256 kB bins
+buffer size: 17408 KB
+# EDGEMAP    1 :    134217712 nodes     dense,   2147483488 edges,   8589934592 bytes,  3.48048 sec,  3.42099 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP    2 :    129376613 nodes     dense,   2069809090 edges,   8589934592 bytes,  3.38164 sec,  3.32428 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP    3 :    113381403 nodes     dense,   1805073892 edges,   8589934592 bytes,  2.97110 sec,  2.91253 sec (bin: 1.01, acc: 1.00) (io: 1.00)
+# EDGEMAP    4 :     67611328 nodes     dense,   1051712272 edges,   8589934592 bytes,  1.48088 sec,  1.43381 sec (bin: 1.02, acc: 1.00) (io: 1.00)
+# EDGEMAP    5 :      5420866 nodes     dense,     78625579 edges,   7990444032 bytes,  1.10885 sec,  1.09413 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    6 :         6551 nodes    sparse,        22967 edges,     26894336 bytes,  0.02054 sec,  0.02022 sec (bin: 1.00, acc: 1.00) (io: 1.00)
+# EDGEMAP    7 :            3 nodes    sparse,           17 edges,        12288 bytes,  0.00014 sec,  0.00010 sec (bin: 1.10, acc: 1.08) (io: 1.00)
+Rank PageRank Id
+  1:         0.0000000177   41537694
+  2:         0.0000000177   95937064
+  3:         0.0000000177   64797376
+  4:         0.0000000177   90001577
+  5:         0.0000000176   13694524
+  6:         0.0000000174  125909819
+  7:         0.0000000174  103734170
+  8:         0.0000000174   53736830
+  9:         0.0000000173    1082192
+ 10:         0.0000000173   72414379
+ 11:         0.0000000173   13677173
+ 12:         0.0000000173   57337430
+ 13:         0.0000000173  127767937
+ 14:         0.0000000172   22757092
+ 15:         0.0000000172   30160668
+ 16:         0.0000000171   46102947
+ 17:         0.0000000171   80690538
+ 18:         0.0000000170   91064272
+ 19:         0.0000000170    7723931
+ 20:         0.0000000170   60911852
+# IO SUMMARY    : 42377089024 bytes, 12.20607 sec, 3.23 GB/s
+# SUMMARY       : 7152727305 edges accessed.
+MemoryCounter: 4169 MB -> 6754 MB, 2585 MB total
+STAT_TYPE, REGION, CATEGORY, TOTAL_TYPE, TOTAL
+STAT, PAGERANK_MAIN, Time, TMAX, 13586
+Bytes read: 42377089024
