@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdbool.h>
-#include "bfs_bpf/bfs_types.h"
+#include "ebpf_types.h"
 
 #define BLK_SIZE 4096
 // #define BLK_SIZE 8192
