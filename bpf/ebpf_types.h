@@ -42,7 +42,7 @@ typedef struct _Scratch {
     length_t    buffer_offset;   // buffer偏移，以字节为单位
     length_t    buffer_len;      // buffer最大长度
     length_t    max_index;       // 最大索引；
-    length_t    curr_index;      // 当前索引
+    length_t    curr_index;      // 当前索引 0
     length_t    scartch;         // 0 不使用scratch，其余使用。
     length_t    unused[57];
 }Scratch;

@@ -5,14 +5,14 @@ LDLIBS = -pthread -lbpf -lm
 
 all: bpf
 
-helpers.o: helpers.c helpers.h bfs/bfs_types.h
+helpers.o: helpers.c helpers.h ebpf_types.h
 
-bfs.o : bfs.c bfs.h bfs/bfs_types.h  helpers.h
+magazine.o : magazine.c  ebpf_types.h  helpers.h
 
 .PHONY: bpf
 bpf:
-	make -C bfs_bpf -f Makefile
+	make -C magazine -f Makefile
 
 .PHONY: clean
 clean:
-	make -C bfs_bpf -f Makefile clean
+	make -C magazine -f Makefile clean

@@ -6,7 +6,7 @@
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 #include <stdbool.h>
-#include "bpf/ebpf_types.h"
+#include "../ebpf_types.h"
 
 char LICENSE[] SEC("license") = "GPL";
 
@@ -15,18 +15,20 @@ char LICENSE[] SEC("license") = "GPL";
  * @param csr: data
  * @param bfs: metadata
  */
-static __inline void set_next_block(CSR *csr, BFS *bfs, struct bpf_xrp *context){
+static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
 
-
-    if( bfs->traversed.current_vertex < IO_INFO){
-        /* 设置下一个I/O
-        */
-        context->next_addr[0] = bfs->traversed.offset[bfs->traversed.current_vertex];
-        /*更新统计信息
-        */
-        bfs->traversed.current_vertex++;
-        bfs->traversed.current_len += bfs->traversed.length[bfs->traversed.current_vertex];
-     
+    if(mg->curr_index < IO_INFO && mg->curr_index < mg->max_index){
+        /*set next io*/
+        context->next_addr[0] = mg->offset[mg->curr_index];
+        context->size[0] = mg->length[mg->curr_index];
+        mg->curr_index++;
+        mg->buffer_offset += mg->length[mg->curr_index];
+        if(mg->buffer_offset > mg->buffer_len){
+            context->done = 1;
+            context->next_addr[0] = 0;
+            context->size[0] = 0;
+            return;
+        }
     } else {
         /* finish bfs_bpf*/
         context->done = 1;
@@ -42,9 +44,9 @@ SEC("haslab_bfs")
 unsigned int haslab_bfs_func(struct bpf_xrp *context) {
     //page信息转换
     dbg_print("bfs-bpf: entered\n");
-    BFS *bfs = (BFS *) context->scratch;
+    Scratch *magazine = (Scratch *) context->scratch;
     
-    set_next_block(bfs,context);
+    set_next_block(magazine,context);
     
     return 0;
 }

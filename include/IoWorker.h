@@ -349,6 +349,7 @@ class IoWorker {
                 if(!(beg < end) || !(offset_pages < max_pages) ) break;
             }
         }
+        pscratch->buffer_len = _buffer_len;
     }
 
     void submitTasks_dense_ebpf(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
