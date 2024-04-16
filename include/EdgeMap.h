@@ -50,6 +50,7 @@ class EdgeMapExecutor {
 
         uint64_t n = _graph.NumberOfNodes();
         uint64_t m = _graph.NumberOfEdges();
+        //遍历frontier，获取每个node的degree
         _num_activated_edges = frontier ? getNumberOfActiveEdges(frontier) : m;
 
         // nothing to do
@@ -59,7 +60,7 @@ class EdgeMapExecutor {
             return;
         }
 
-        // filter out empty nodes
+        // filter out empty nodes，删除无效的node
         filterOutEmptyNodes(frontier);
 
         _num_activated_nodes = frontier ? frontier->count() : n;
@@ -67,13 +68,14 @@ class EdgeMapExecutor {
         // switch between dense, sparse
         if (frontier) {
             if (_num_activated_nodes + _num_activated_edges > m * DENSE_THRESHOLD) {
-            // if ( _num_activated_edges > (n * n) ) {
                 if (!frontier->is_dense())
                     frontier->to_dense();
             } else {
                 if (frontier->is_dense())
                     frontier->to_sparse();
                 else
+                //无论frontier是否为dense，都根据sparse创建dense，只是 is_dense不置为true
+                //用于scatter线程检查actived node
                     frontier->fill_dense();
             }
 
@@ -87,6 +89,7 @@ class EdgeMapExecutor {
         }
 
         // build sparse page frontier in sparse case
+        // 根据node frontier 创建 graph的activepage（bitmap）
         if (frontier) {
             if (frontier->is_dense()) {
                 buildDensePageFrontier(frontier);
@@ -103,7 +106,7 @@ class EdgeMapExecutor {
             _pb_engine->setFrontier(_graph, frontier, flags);
         else
             _compute_engine->setFrontier(_graph, frontier, flags);
-
+        //传递给IO engine 两个frontier，一个是node，一个是page
         _io_engine->setFrontier(frontier, _sparse_page_frontier);
     }
 
@@ -201,6 +204,7 @@ class EdgeMapExecutor {
 
         if (frontier->is_dense()) {
             Bitmap *bitmap = frontier->get_dense();
+            //只有不为空的node才为1
             Bitmap::and_bitmap(bitmap, _graph.GetNonEmptyNodes());
 
         } else {
@@ -239,6 +243,7 @@ class EdgeMapExecutor {
                     PAGEID pid, pid_end;
                     _graph.GetPageRange(vid, &pid, &pid_end);
                     while (pid <= pid_end) {
+                        //zhengxd： 用于Page interleaving布局寻找disk
                         int disk_id = pid % num_disks;
                         _sparse_page_frontier[disk_id]->push(pid++ >> num_disks_bit);
                     }

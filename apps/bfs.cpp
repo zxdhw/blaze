@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
 
     parents[startNode] = startNode;
 
+    // zhengxd: 创建一个insertbag，将start node加进去
     Worklist<VID>* frontier = new Worklist<VID>(n);
     frontier->activate(startNode);
 

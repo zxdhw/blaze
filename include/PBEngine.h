@@ -49,13 +49,14 @@ class PBEngine {
         if (should_output(flags)) {
             uint64_t n = graph.NumberOfNodes();
             _out_frontier = new Worklist<VID>(n);
+            // 如果前一个fontier是dense，则后一个大概率也是dense，故将其置为dense
             if (!frontier || frontier->is_dense()) {
                _out_frontier->to_dense();
             }
         } else {
             _out_frontier = nullptr;
         }
-
+        //给gather work一个空的worklist
         for (auto worker : _gather_workers) {
             worker->setFrontier(_out_frontier);
         }

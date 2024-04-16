@@ -281,7 +281,7 @@ class IoWorker {
             offset = (uint64_t)page_id * PAGE_SIZE;
             IoItem* item = new IoItem(_id, page_id, 1, buf);
             enqueueRequest(buf, PAGE_SIZE, offset, item);
-
+            //将下发过的page置为1，防止重复下发。
             page_bitmap->set_bit(page_id);
 
             beg++;

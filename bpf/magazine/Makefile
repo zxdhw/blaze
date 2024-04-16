@@ -4,11 +4,7 @@ CC ?= gcc
 
 BPF_CFLAGS ?= -I$(LIBBPF_DIR)/build/usr/
 
-all: bfs_bpf.o bfs_bpf_test.o
-
-bfs_bpf.o: bfs_bpf.c bfs_types.h
-
-bfs_bpf_test.o: bfs_bpf_test.c bfs_types.h
+magazine.o: magazine.c ../ebpf_types.h
 
 
 %.o: %.c
