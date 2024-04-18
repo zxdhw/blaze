@@ -43,7 +43,8 @@ using Mutex = galois::substrate::SimpleLock;
 typedef uint32_t FLAGS;
 const FLAGS no_output           = 0x01;
 const FLAGS prop_blocking       = 0x10;
-const FLAGS use_ebpf            = 0x20;
+// 1 表示使用，其他任何值均表示不使用
+const FLAGS ebpf                = 0x01;
 
 inline bool should_output(const FLAGS& flags) {
     return !(flags & no_output);
@@ -54,7 +55,7 @@ inline bool use_prop_blocking(const FLAGS& flags) {
 }
 
 inline bool is_use_ebpf(const FLAGS& flags) {
-    return flags & use_ebpf;
+    return flags & ebpf;
 }
 enum ComputeWorkerRole { NORMAL, BIN, ACCUMULATE };
 

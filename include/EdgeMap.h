@@ -125,13 +125,13 @@ class EdgeMapExecutor {
 
         if (use_prop_blocking(_flags)) {
             _pb_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync,use_ebpf);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
             _compute_time = _pb_engine->stop(_graph, _func, sync);
             _out_frontier = _pb_engine->getOutFrontier();
 
         } else {
             _compute_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync,use_ebpf);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
             _compute_time = _compute_engine->stop(_graph);
             _out_frontier = _compute_engine->getOutFrontier();
         }
@@ -294,7 +294,7 @@ class EdgeMapExecutor {
 };
 
 template <typename G, typename F>
-Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS use_ebpf) {
+Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS use_ebpf = 0) {
     EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags, use_ebpf);
     executor.run();
     return executor.newFrontier();

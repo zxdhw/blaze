@@ -1,12 +1,12 @@
 /*
  * BPF program for BFS
  *
- * Author: xuda zheng
+ * Author: zhengxd
  */
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 #include <stdbool.h>
-#include "../ebpf_types.h"
+#include "ebpf_types.h"
 
 char LICENSE[] SEC("license") = "GPL";
 
@@ -35,8 +35,7 @@ static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
         context->next_addr[0] = 0;
         context->size[0] = 0;
         return;
-    }
-    
+    } 
     return;
 }
 

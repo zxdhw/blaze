@@ -18,6 +18,8 @@ file(GLOB HEADERS "include/*.h")
 include_directories(include)
 include_directories(apps/include)
 include_directories(include/concurrentqueue)
+include_directories(magazine)
+
 
 ######################################
 # Libraries installed in system path #

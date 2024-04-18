@@ -12,6 +12,8 @@
 
 namespace blaze {
 
+#define __NR_io_submit_xrp 447
+
 static int io_setup(unsigned nr, aio_context_t *ctxp) {
     return syscall(__NR_io_setup, nr, ctxp);
 }

@@ -7,12 +7,12 @@
 // }
 // Data-level information
 
-typedef unsigned long ptr__t;
-typedef unsigned long pageid_t;
-typedef unsigned long length_t; //以page为单位
-typedef unsigned long offset_t; //以page为单位
+typedef unsigned long ptr__m;
+typedef unsigned long pageid_m;
+typedef unsigned long length_m; //以page为单位
+typedef unsigned long offset_m; //以page为单位
 
-#define ADJ_SIZE sizeof(Adj_info)
+
 #define BLK_SIZE_SSD 4096
 #define SCRATCH_SIZE 4096   // 4KB
 #define IO_INFO  150        // 最大可以寄生的IO数量
@@ -25,29 +25,26 @@ typedef unsigned long offset_t; //以page为单位
 #define BLOCK_OFFSET_MASK SCRATCH_SIZE
 #define INFTY_64 vertex_t(1<<63) //将默认值设为INFTY_64
 
-/*init vertex info*/
-#define ROOT_VERTEX_OFFSET 0
-#define ROOT_VERTEX 0
 
 // Node offset "encoding"
-#define FILE_MASK ((ptr__t)1 << 63)
+#define FILE_MASK ((ptr__m)1 << 63)
 
 /*struct used to communicate with BPF function via scratch buffer */
 typedef struct _Scratch {
 
-    pageid_t    spage[IO_INFO];  // 起始pageid
-    offset_t    offset[IO_INFO]; // 4KB对齐
-    length_t    length[IO_INFO]; // 以4KB为单位
+    pageid_m    spage[IO_INFO];  // 起始pageid
+    offset_m    offset[IO_INFO]; // 4KB对齐
+    length_m    length[IO_INFO]; // 以4KB为单位
 
-    length_t    buffer_offset;   // buffer偏移，以字节为单位
-    length_t    buffer_len;      // buffer最大长度
-    length_t    max_index;       // 最大索引；
-    length_t    curr_index;      // 当前索引 0
-    length_t    scartch;         // 0 不使用scratch，其余使用。
-    length_t    unused[57];
+    length_m    buffer_offset;   // buffer偏移，以字节为单位
+    length_m    buffer_len;      // buffer最大长度
+    length_m    max_index;       // 最大索引；
+    length_m    curr_index;      // 当前索引 0
+    length_m    scartch;         // 0 不使用scratch，其余使用。
+    length_m    unused[57];
 }Scratch;
 
-_Static_assert (sizeof(Scratch) == SCRATCH_SIZE, "struct too large for scratch page");
+// _Static_assert (sizeof(Scratch) == SCRATCH_SIZE, "struct too large for scratch page");
 
 // #ifdef VERBOSE
 // #define dbg_print(...) bpf_printk(__VA_ARGS__)

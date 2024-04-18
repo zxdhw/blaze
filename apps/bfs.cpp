@@ -38,10 +38,10 @@ static cll::opt<int>
                 cll::desc("Size of a bin buffer(number of nodes) (default: 128)"),
                 cll::init(BIN_BUF_SIZE));
 
-static cll::opt<int>
-        binBufSize("ebpf",
-                cll::desc("use ebpf ibaio syscall) (default: 0)"),
-                cll::init(USE_EBPF));
+// static cll::opt<int>
+//         use_ebpf("use_ebpf",
+//                 cll::desc("use ebpf ibaio syscall) (default: 0)"),
+//                 cll::init(USE_EBPF));
 
 static cll::opt<float>
         binningRatio("binningRatio",

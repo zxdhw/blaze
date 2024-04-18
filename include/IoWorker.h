@@ -11,8 +11,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include <unordered_set>
-#include "bpf/helpers.h"
-#include "magazine.h"
+#include "helpers.h"
 
 namespace blaze {
 
@@ -54,9 +53,8 @@ class IoWorker {
         free(_events);
     }
 
-    //load bpf_prog
-    uint64_t init_bpf_program(){
-        _bpf_fd = load_bpf_program("/home/femu/blaze/bpf/bfs/bfs_bpf.o");
+    void init_bpf_program(){
+        _bpf_fd = load_bpf_program("/home/femu/blaze/magazine/magazine.o");
     }
         
     void initMagazine ()
@@ -576,9 +574,9 @@ class IoWorker {
     struct io_event*                    _events;
 
     // ebpf 
-    uint64_t                _bpf_fd;
-    char*                _scratch_buf;
-    char**               _scratch_bufs;
+    int                     _bpf_fd;
+    char*                   _scratch_buf;
+    char**                  _scratch_bufs;
     Scratch*                _scratch;
     Scratch**               _scratchs;
     uint32_t                _scratch_pages;
