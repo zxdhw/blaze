@@ -80,14 +80,14 @@ class IoWorker {
         sync.set_num_free_pages(_id, _num_buffer_pages);
 
         if (dense_all) {
-            run_dense_all(page_bitmap, sync, io_sync, use_ebpf);
+            run_dense_all(page_bitmap, sync, io_sync);
         }
 
         if (sparse_page_frontier) {
-            run_sparse(sparse_page_frontier, page_bitmap, sync, io_sync, use_ebpf);
+            run_sparse(sparse_page_frontier, page_bitmap, sync, io_sync);
 
         } else {
-            run_dense(page_bitmap, sync, io_sync, use_ebpf);
+            run_dense(page_bitmap, sync, io_sync);
         }
     }
 
@@ -105,7 +105,7 @@ class IoWorker {
     }
 
  private:
-    void run_dense_all(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
+    void run_dense_all(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -113,13 +113,13 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_dense_all(beg, end, sync, io_sync,use_ebpf);
+            submitTasks_dense_all(beg, end, sync, io_sync);
             received = receiveTasks(done_tasks);
             dispatchTasks(done_tasks, received);
         }
     }
 
-    void run_dense(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync,FLAGS& use_ebpf) {
+    void run_dense(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -127,8 +127,8 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            if(is_use_ebpf(use_ebpf)){
-                submitTasks_dense_ebpf(page_bitmap, beg, end, sync, io_sync, use_ebpf);
+            if(is_use_ebpf(_use_ebpf)){
+                submitTasks_dense_ebpf(page_bitmap, beg, end, sync, io_sync);
             } else {
                 submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
             }
@@ -138,7 +138,7 @@ class IoWorker {
     }
 
     void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, 
-                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
+                            Synchronization& sync, IoSync& io_sync) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -146,8 +146,8 @@ class IoWorker {
         auto const end = sparse_page_frontier->end();
 
         while (!_requested_all || _received < _queued) {
-            if(is_use_ebpf(use_ebpf)){
-                submitTasks_sparse_ebpf(beg, end, page_bitmap, sync, io_sync, use_ebpf);
+            if(is_use_ebpf(_use_ebpf)){
+                submitTasks_sparse_ebpf(beg, end, page_bitmap, sync, io_sync);
             } else {
                 submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
             }
@@ -157,7 +157,7 @@ class IoWorker {
     }
 
     void submitTasks_dense_all(PAGEID& beg, const PAGEID& end,
-                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf)
+                            Synchronization& sync, IoSync& io_sync)
     {
         char* buf;
         off_t offset;
@@ -351,7 +351,7 @@ class IoWorker {
     }
 
     void submitTasks_dense_ebpf(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
-                        Synchronization& sync, IoSync& io_sync,FLAGS& use_ebpf)
+                        Synchronization& sync, IoSync& io_sync)
     {
         char* buf;
         off_t offset;
@@ -450,7 +450,7 @@ class IoWorker {
     void submitTasks_sparse_ebpf(CountableBag<PAGEID>::iterator& beg,
                             const CountableBag<PAGEID>::iterator& end,
                             Bitmap* page_bitmap,
-                            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf)
+                            Synchronization& sync, IoSync& io_sync)
     {
         char* buf;
         off_t offset;
