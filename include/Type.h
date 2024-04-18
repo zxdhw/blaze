@@ -33,7 +33,8 @@ struct IoItem {
     PAGEID  page;
     int     num;
     char*   buf;
-    IoItem(int d, PAGEID p, int n, char* b): disk_id(d), page(p), num(n), buf(b) {}
+    char*   _scratch_buf;
+    IoItem(int d, PAGEID p, int n, char* b, char* c): disk_id(d), page(p), num(n), buf(b) ,_scratch_buf(c) {}
 };
 
 using PageReadList = std::vector<std::pair<PAGEID, char *>>;

@@ -13,7 +13,7 @@ typedef unsigned long length_m; //以page为单位
 typedef unsigned long offset_m; //以page为单位
 
 
-#define BLK_SIZE_SSD 4096
+#define PAGE_SIZE 4096
 #define SCRATCH_SIZE 4096   // 4KB
 #define IO_INFO  150        // 最大可以寄生的IO数量
 #define MAX_BIO_SIZE 128 * 1024       // 单次IO（包括寄生）的最大大小 128KB 

@@ -59,13 +59,15 @@ class IoWorker {
         
     void initMagazine ()
     {
-        _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
-        _scratch_bufs = (char**)calloc(IO_QUEUE_DEPTH, sizeof(*_scratchs));
+        //临时使用，通过memcpy拷贝给传入内核的_scratch_buf
+        _scratch_buf_tmp = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
+        // 临时使用，与iocbs相同，内核拷贝完成后返回，才提交下一批请求。因此可以重复使用。
+        _scratch_bufs_tmp = (char**)calloc(IO_QUEUE_DEPTH, sizeof(*_scratchs));
     }
     
     void deinitMagazine() {
-        free(_scratch_buf);
-        free(_scratch_bufs);
+        free(_scratch_buf_tmp);
+        free(_scratch_bufs_tmp);
     }
 
 
@@ -182,7 +184,7 @@ class IoWorker {
             uint32_t len = num_pages * PAGE_SIZE;
             buf = (char*)aligned_alloc(PAGE_SIZE, len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+            IoItem* item = new IoItem(_id, page_id, num_pages, buf, _scratch_buf_tmp);
             enqueueRequest(buf, len, offset, item);
 
             beg += num_pages;
@@ -239,7 +241,7 @@ class IoWorker {
                 uint32_t len = num_pages * PAGE_SIZE;
                 buf = (char*)aligned_alloc(PAGE_SIZE, len);
                 offset = (uint64_t)page_id * PAGE_SIZE;
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf, _scratch_buf_tmp);
                 enqueueRequest(buf, len, offset, item);
             }
         }
@@ -282,7 +284,7 @@ class IoWorker {
 
             buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, 1, buf);
+            IoItem* item = new IoItem(_id, page_id, 1, buf, _scratch_buf_tmp);
             enqueueRequest(buf, PAGE_SIZE, offset, item);
             //将下发过的page置为1，防止重复下发。
             page_bitmap->set_bit(page_id);
@@ -308,7 +310,7 @@ class IoWorker {
 
         uint32_t offset = 0, offset_pages = 0, index = 0;
         uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)&_scratch_buf[s_index];
+        Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
         pscratch->scartch = 0;
@@ -362,6 +364,8 @@ class IoWorker {
         off_t offset;
         void* data;
         uint32_t index = 0;
+        //分配magazine内存
+        char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
 
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             // skip an entire word in bitmap if possible
@@ -396,9 +400,12 @@ class IoWorker {
                 buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
                 size_t data_len = num_pages * PAGE_SIZE;
                 offset = (uint64_t)page_id * PAGE_SIZE;
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+
+                memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
+                memset(&_scratch_buf_tmp[index],0,sizeof(*_scratch));
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf, &_scratch_buf[index]);
                 enqueueRequest_xrp(buf, data_len, _buffer_len, offset, item);
-                _scratch_bufs[index] = &_scratch_buf[index];
+                _scratch_bufs_tmp[index] = &_scratch_buf[index];
             }
         }
 
@@ -410,7 +417,7 @@ class IoWorker {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
 
-        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs);
+        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
         if (ret > 0) {
             _sent += ret;
         }
@@ -422,7 +429,7 @@ class IoWorker {
 
         uint32_t offset = 0, index = 0;
         uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)&_scratch_buf[s_index];
+        Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
         pscratch->scartch = 0;
@@ -462,6 +469,8 @@ class IoWorker {
         void* data;
         PAGEID page_id;
         uint32_t index = 0;
+        //分配magazine内存
+        char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             page_id = *beg;
@@ -480,9 +489,11 @@ class IoWorker {
 
             buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, 1, buf);
+            
+            memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
+            IoItem* item = new IoItem(_id, page_id, 1, buf, &_scratch_buf[index]);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
-            _scratch_bufs[index] = &_scratch_buf[index];
+            _scratch_bufs_tmp[index] = &_scratch_buf[index];
 
             page_bitmap->set_bit(page_id);
             index++;
@@ -496,7 +507,7 @@ class IoWorker {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
 
-        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs);
+        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
         if (ret > 0) {
             _sent += ret;
         }
@@ -583,8 +594,8 @@ class IoWorker {
 
     // ebpf 
     int                     _bpf_fd;
-    char*                   _scratch_buf;
-    char**                  _scratch_bufs;
+    char*                   _scratch_buf_tmp;
+    char**                  _scratch_bufs_tmp;
     Scratch*                _scratch;
     Scratch**               _scratchs;
     uint32_t                _scratch_pages;

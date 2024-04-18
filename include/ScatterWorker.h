@@ -8,6 +8,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include "Bin.h"
+#include "ebpf_types.h"
 
 namespace blaze {
 
@@ -123,14 +124,47 @@ class ScatterWorker {
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
         while (ppid_start < ppid_end) {
+            /* blaze的数据分布  
+             *  disk0----disk1----disk2
+             *  0,3,6----1,4,7----2,5,8(page id)
+             *  0,1,2----0,1,2----0,1,2(bitmap page id)
+            */
             const PAGEID pid = ppid_start * _num_disks + item.disk_id;
             processFetchedPage(graph, func, pid, buffer);
             ppid_start++;
             buffer += PAGE_SIZE;
         }
-        _num_processed_pages += item.num;
+        // 处理scratch
+        Scratch* Pscratch = (Scratch*) item._scratch_buf;
+        uint64_t index = Pscratch->curr_index;
+        if(Pscratch->scartch){
+            while( (Pscratch->buffer_offset + Pscratch->length[index] <= Pscratch->buffer_len) && 
+                                (Pscratch->curr_index <= Pscratch->max_index) ) {
+                ppid_start = Pscratch->spage[index];
+                const PAGEID ppid_end_ebpf   = Pscratch->buffer_offset + Pscratch->length[index];
+                buffer = item.buf + Pscratch->buffer_offset;
+
+                while (ppid_start < ppid_end_ebpf) {
+                    const PAGEID pid = ppid_start * _num_disks + item.disk_id;
+                    processFetchedPage(graph, func, pid, buffer);
+                    ppid_start++;
+                    buffer += PAGE_SIZE;
+                }
+                Pscratch->buffer_offset += Pscratch->length[index];
+                Pscratch->curr_index ++;
+                index++;
+            }
+        }
+        if(Pscratch->scartch){
+            sync.add_num_free_pages(item.disk_id, (Pscratch->buffer_len % PAGE_SIZE));
+            _num_processed_pages += (Pscratch->buffer_len % PAGE_SIZE);
+        } else {
+            sync.add_num_free_pages(item.disk_id, item.num);
+            _num_processed_pages += item.num;
+        }
         free(item.buf);
-        sync.add_num_free_pages(item.disk_id, item.num);
+        free(item._scratch_buf);
+        
     }
 
     template <typename Gr, typename Func>
