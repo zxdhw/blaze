@@ -93,6 +93,14 @@ class IoEngine {
         return sum;
     }
 
+    uint64_t getTotalBytesAccessed_ebpf() const {
+        uint64_t sum = 0;
+        for (int i = 0; i < _num_workers; ++i) {
+            sum += _workers[i]->getBytesAccessed_ebpf();
+        }
+        return sum;
+    }
+
     void initState() {
         for (int i = 0; i < _num_workers; ++i) {
             _workers[i]->initState();

@@ -25,7 +25,7 @@ class IoWorker {
         :   _id(id),
             _buffered_tasks(out),
             _queued(0), _sent(0), _received(0), _requested_all(false),
-            _total_bytes_accessed(0), _time(0.0)
+            _total_bytes_accessed(0),_total_bytes_accessed_ebpf(0), _time(0.0)
     {
         initAsyncIo();
         initMagazine();
@@ -95,12 +95,17 @@ class IoWorker {
         return _total_bytes_accessed;
     }
 
+    uint64_t getBytesAccessed_ebpf() const {
+        return _total_bytes_accessed_ebpf;
+    }
+
     void initState() {
         _queued = 0;
         _sent = 0;
         _received = 0;
         _requested_all = false;
         _total_bytes_accessed = 0;
+        _total_bytes_accessed_ebpf = 0;
         _time = 0;
     }
 
@@ -477,6 +482,7 @@ class IoWorker {
             offset = (uint64_t)page_id * PAGE_SIZE;
             IoItem* item = new IoItem(_id, page_id, 1, buf);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
+            _scratch_bufs[index] = &_scratch_buf[index];
 
             page_bitmap->set_bit(page_id);
             index++;
@@ -526,6 +532,7 @@ class IoWorker {
         _queued++;
 
         _total_bytes_accessed += data_len;
+        _total_bytes_accessed_ebpf += _buffer_len;
     }    
 
     int receiveTasks(IoItem** done_tasks) {
@@ -566,6 +573,7 @@ class IoWorker {
     int64_t                 _num_buffer_pages;
     // For statistics
     uint64_t                _total_bytes_accessed;
+    uint64_t                _total_bytes_accessed_ebpf;
     double                  _time;
 
     aio_context_t                       _ctx;

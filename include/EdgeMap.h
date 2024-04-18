@@ -157,8 +157,10 @@ class EdgeMapExecutor {
     void print() {
         int round = _runtime.getRound();
         uint64_t io_bytes = 0;
+        uint64_t io_bytes_ebpf = 0;
         if (_io_engine)
             io_bytes = _io_engine->getTotalBytesAccessed();
+            io_bytes_ebpf = _io_engine->getTotalBytesAccessed_ebpf();
 
         // frontier type
         string frontier_type_name;
@@ -170,8 +172,8 @@ class EdgeMapExecutor {
         // general info
         std::string info;
         char buf[1024];
-        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %8.5f sec, %8.5f sec",
-                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes, _compute_time, _io_time);
+        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %12lu bytes(ebpf), %8.5f sec, %8.5f sec",
+                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes,io_bytes_ebpf, _compute_time, _io_time);
         info.append(buf);
 
         std::cout << info;
