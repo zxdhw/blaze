@@ -108,7 +108,6 @@ class ScatterWorker {
         }
 
         VID* edges = (VID*)(buffer + offset_in_buf);
-
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
             if (func.cond(dst))
@@ -135,9 +134,10 @@ class ScatterWorker {
             buffer += PAGE_SIZE;
         }
         // 处理scratch
-        Scratch* Pscratch = (Scratch*) item._scratch_buf;
-        uint64_t index = Pscratch->curr_index;
-        if(Pscratch->scartch){
+        if(item.scratch){
+            Scratch* Pscratch = (Scratch*) item._scratch_buf;
+            uint64_t index = Pscratch->curr_index;
+            printf("---scratch proccess----\n");
             while( (Pscratch->buffer_offset + Pscratch->length[index] <= Pscratch->buffer_len) && 
                                 (Pscratch->curr_index <= Pscratch->max_index) ) {
                 ppid_start = Pscratch->spage[index];
@@ -155,20 +155,21 @@ class ScatterWorker {
                 index++;
             }
         }
-        if(Pscratch->scartch){
+        if(item.scratch){
+            Scratch* Pscratch = (Scratch*) item._scratch_buf;
             sync.add_num_free_pages(item.disk_id, (Pscratch->buffer_len % PAGE_SIZE));
             _num_processed_pages += (Pscratch->buffer_len % PAGE_SIZE);
+            free(item._scratch_buf);
         } else {
             sync.add_num_free_pages(item.disk_id, item.num);
             _num_processed_pages += item.num;
         }
         free(item.buf);
-        free(item._scratch_buf);
-        
     }
 
     template <typename Gr, typename Func>
     void processFetchedPage(Gr& graph, Func& func, PAGEID pid, char* buffer) {
+        // printf("---processFetchedPage----\n");
         const VID vid_start = _p2v_map[pid].first;
         const VID vid_end       = _p2v_map[pid].second;
 

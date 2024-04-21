@@ -3,7 +3,7 @@ CLANG ?= clang
 CC ?= gcc
 BPF_CFLAGS ?= -I$(LIBBPF_DIR)/build/usr/
 
-magazine.o: magazine.c ../ebpf_types.h
+magazine.o: magazine.c ebpf_types.h
 
 %.o: %.c
 	$(CLANG) -S \

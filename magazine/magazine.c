@@ -25,15 +25,15 @@ static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
         mg->buffer_offset += mg->length[mg->curr_index];
         if(mg->buffer_offset > mg->buffer_len){
             context->done = 1;
-            context->next_addr[0] = 0;
-            context->size[0] = 0;
+            // context->next_addr[0] = 0;
+            // context->size[0] = 0;
             return;
         }
     } else {
         /* finish bfs_bpf*/
         context->done = 1;
-        context->next_addr[0] = 0;
-        context->size[0] = 0;
+        // context->next_addr[0] = 0;
+        // context->size[0] = 0;
         return;
     } 
     return;

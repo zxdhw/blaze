@@ -184,7 +184,7 @@ class IoWorker {
             uint32_t len = num_pages * PAGE_SIZE;
             buf = (char*)aligned_alloc(PAGE_SIZE, len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, num_pages, buf, _scratch_buf_tmp);
+            IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
             enqueueRequest(buf, len, offset, item);
 
             beg += num_pages;
@@ -241,7 +241,7 @@ class IoWorker {
                 uint32_t len = num_pages * PAGE_SIZE;
                 buf = (char*)aligned_alloc(PAGE_SIZE, len);
                 offset = (uint64_t)page_id * PAGE_SIZE;
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf, _scratch_buf_tmp);
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
                 enqueueRequest(buf, len, offset, item);
             }
         }
@@ -284,7 +284,7 @@ class IoWorker {
 
             buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, 1, buf, _scratch_buf_tmp);
+            IoItem* item = new IoItem(_id, page_id, 1, buf,0);
             enqueueRequest(buf, PAGE_SIZE, offset, item);
             //将下发过的page置为1，防止重复下发。
             page_bitmap->set_bit(page_id);
@@ -403,7 +403,7 @@ class IoWorker {
 
                 memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
                 memset(&_scratch_buf_tmp[index],0,sizeof(*_scratch));
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf, &_scratch_buf[index]);
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf,1, &_scratch_buf[index]);
                 enqueueRequest_xrp(buf, data_len, _buffer_len, offset, item);
                 _scratch_bufs_tmp[index] = &_scratch_buf[index];
             }
@@ -491,7 +491,7 @@ class IoWorker {
             offset = (uint64_t)page_id * PAGE_SIZE;
             
             memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
-            IoItem* item = new IoItem(_id, page_id, 1, buf, &_scratch_buf[index]);
+            IoItem* item = new IoItem(_id, page_id, 1, buf,1, &_scratch_buf[index]);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
             _scratch_bufs_tmp[index] = &_scratch_buf[index];
 
