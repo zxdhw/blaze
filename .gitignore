@@ -1,6 +1,12 @@
-analysis
-build
-*.log
-*.out
-*.txt
-*.ll
+
+# 忽略 build 文件夹
+build/
+
+# 忽略 analysis 文件夹中的所有文件
+!analysis
+
+# 但是包括 analysis 文件夹中的 .sh 文件
+analysis/**/*.txt
+analysis/**/*.out
+analysis/**/*.log
+analysis/**/*.png
