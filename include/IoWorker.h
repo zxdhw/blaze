@@ -391,7 +391,7 @@ class IoWorker {
                 }
                 // magazine 填充
                 magazine_dense(page_bitmap,beg,end,num_pages,index);
-                uint32_t magazine_pages = _buffer_len % PAGE_SIZE;
+                uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
                 // wait until free pages are available
                 while (sync.get_num_free_pages(_id) < magazine_pages) {}
@@ -428,15 +428,16 @@ class IoWorker {
                             const CountableBag<PAGEID>::iterator& end, uint32_t used_pages, uint32_t s_index){
 
         uint32_t offset = 0, index = 0;
-        uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
+        // uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
         Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
+        pscratch->max_index = 0;
         pscratch->scartch = 0;
         _buffer_len = used_pages * PAGE_SIZE;
         PAGEID page_id;
 
-        while (beg != end && _buffer_len < MAX_BIO_SIZE ) {
+        while (beg != end && _buffer_len < MAX_BIO_SIZE) {
   
             page_id = *beg;
             if (page_bitmap->get_bit(page_id)) {
@@ -453,6 +454,7 @@ class IoWorker {
                 pscratch->length[index] = 1;
                 pscratch->max_index = index;
                 pscratch->scartch = 1;
+                pscratch->buffer_len = _buffer_len;
                 index++;
                 page_bitmap->set_bit(page_id);
             }
@@ -469,7 +471,7 @@ class IoWorker {
         void* data;
         PAGEID page_id;
         uint32_t index = 0;
-        //分配magazine内存
+        //预分配magazine内存，数量与aio 队列保持一致。
         char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
@@ -479,9 +481,11 @@ class IoWorker {
                 beg++;
                 continue;
             }
+            // 提前加锁，避免magazine_sparse时重复下发请求
+            page_bitmap->set_bit(page_id);
             beg++;
             magazine_sparse(page_bitmap,beg,end,1,index);
-            uint32_t magazine_pages = _buffer_len % PAGE_SIZE;
+            uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
             // wait until free pages are available
             while (sync.get_num_free_pages(_id) < magazine_pages) {}
@@ -489,13 +493,13 @@ class IoWorker {
 
             buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            
+            //scratch，无论scratch是否包含数据，都下发一个scratch。
             memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
             IoItem* item = new IoItem(_id, page_id, 1, buf,1, &_scratch_buf[index]);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
             _scratch_bufs_tmp[index] = &_scratch_buf[index];
 
-            page_bitmap->set_bit(page_id);
+            // page_bitmap->set_bit(page_id);
             index++;
         }
 

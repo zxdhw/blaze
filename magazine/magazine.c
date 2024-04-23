@@ -17,18 +17,18 @@ char LICENSE[] SEC("license") = "GPL";
  */
 static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
 
-    if(mg->curr_index < IO_INFO && mg->curr_index < mg->max_index){
+    if(mg->scartch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
         /*set next io*/
         context->next_addr[0] = mg->offset[mg->curr_index];
         context->size[0] = mg->length[mg->curr_index];
         mg->curr_index++;
         mg->buffer_offset += mg->length[mg->curr_index];
-        if(mg->buffer_offset > mg->buffer_len){
-            context->done = 1;
-            // context->next_addr[0] = 0;
-            // context->size[0] = 0;
-            return;
-        }
+        // if(mg->buffer_offset > mg->buffer_len){
+        //     context->done = 1;
+        //     // context->next_addr[0] = 0;
+        //     // context->size[0] = 0;
+        //     return;
+        // }
     } else {
         /* finish bfs_bpf*/
         context->done = 1;
