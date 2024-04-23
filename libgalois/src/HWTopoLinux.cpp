@@ -95,7 +95,7 @@ static unsigned getNumaNode(cpuinfo& c) {
 static std::vector<cpuinfo> parseCPUInfo() {
   std::vector<cpuinfo> vals;
 
-  const int len = 1024;
+  const int len = 10240;
   std::array<char, len> line;
 
   std::ifstream procInfo("/proc/cpuinfo");
