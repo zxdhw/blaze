@@ -139,6 +139,7 @@ class ScatterWorker {
         if(item.scratch){
             Scratch* pscratch = (Scratch*) item._scratch_buf;
             // pscratch->curr_index已经在magazine中迭代到max_index+1
+            printf("----scratch resubmission times: %lu-----\n",pscratch->curr_index);
             uint64_t index = 0;
             while( pscratch->scartch && index <= pscratch->max_index){
 

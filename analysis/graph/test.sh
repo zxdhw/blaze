@@ -16,7 +16,7 @@ INDEX='/home/femu/dataset/'
 DATA='/home/femu/dataset/'
 
 # parameter
-COMPUTEWORKERS=10
+COMPUTEWORKERS=2
 STARTNODE=101
 EBPF=1
 TIMES=1
@@ -33,7 +33,7 @@ for ((n=0; n<TIMES; n++)); do
         for ((i=0; i<${#index[@]}; i++)); do
             k="${index[i]}"
             j="${data[i]}"
-            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} >> ${EBPF}_${e}_${k}.out
+            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} | head -n 100000 > ${EBPF}_${e}_${k}_new.out
             # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE $INDEX/${k} $DATA/${j} >> nromal.out
         done
     done
