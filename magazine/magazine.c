@@ -16,10 +16,12 @@ char LICENSE[] SEC("license") = "GPL";
  * @param bfs: metadata
  */
 static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
+    dbg_print("-------set_next_block enter----\n");
 
     if(mg->scartch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
         /*set next io*/
         context->next_addr[0] = mg->offset[mg->curr_index];
+         dbg_print("-------next_addr is %lld----\n");
         context->size[0] = mg->length[mg->curr_index] * PAGE_SIZE;
         mg->curr_index++;
         mg->buffer_offset += mg->length[mg->curr_index];

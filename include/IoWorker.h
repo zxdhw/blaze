@@ -361,9 +361,9 @@ class IoWorker {
                         Synchronization& sync, IoSync& io_sync)
     {
         char* buf;
-        off_t offset;
+        uint64_t offset;
         void* data;
-        uint32_t index = 0;
+        uint64_t index = 0;
         //分配magazine内存
         char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
 
@@ -427,7 +427,7 @@ class IoWorker {
     void magazine_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,
                             const CountableBag<PAGEID>::iterator& end, uint32_t used_pages, uint32_t s_index){
 
-        uint32_t offset = 0, index = 0;
+        uint64_t offset = 0, index = 0;
         // uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
         Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
         pscratch->buffer_offset = used_pages;
@@ -467,7 +467,7 @@ class IoWorker {
                             Synchronization& sync, IoSync& io_sync)
     {
         char* buf;
-        off_t offset;
+        uint64_t offset;
         void* data;
         PAGEID page_id;
         uint32_t index = 0;

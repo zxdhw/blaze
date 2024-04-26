@@ -7,10 +7,10 @@
 // }
 // Data-level information
 
-typedef unsigned long ptr__m;
-typedef unsigned long pageid_m;
-typedef unsigned long length_m; //以page为单位
-typedef unsigned long offset_m; //以page为单位
+typedef unsigned long long ptr__m;
+typedef unsigned long long pageid_m;
+typedef unsigned long long length_m; //以page为单位
+typedef unsigned long long offset_m; //以page为单位
 
 
 #define PAGE_SIZE 4096

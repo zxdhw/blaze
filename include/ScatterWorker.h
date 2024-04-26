@@ -107,6 +107,34 @@ class ScatterWorker {
             degree -= (offset_end - page_end) >> EDGE_WIDTH_BITS;
         }
 
+
+        // void ebpf_dump_page(uint8_t *page_image, uint64_t size) {
+        //     int row, column, addr;
+        //     uint64_t page_offset = 0;
+        //     printk("=============================EBPF PAGE DUMP START=============================\n");
+        //     for (row = 0; row < size / 16; ++row) {
+        //         printk(KERN_CONT "%08llx  ", page_offset + 16 * row);
+        //         for (column = 0; column < 16; ++column) {
+        //             addr = 16 * row + column;
+        //             printk(KERN_CONT "%02x ", page_image[addr]);
+        //             if (column == 7 || column == 15) {
+        //                 printk(KERN_CONT " ");
+        //             }
+        //         }
+        //         printk(KERN_CONT "|");
+        //         for (column = 0; column < 16; ++column) {
+        //             addr = 16 * row + column;
+        //             if (page_image[addr] >= '!' && page_image[addr] <= '~') {
+        //                 printk(KERN_CONT "%c", page_image[addr]);
+        //             } else {
+        //                 printk(KERN_CONT ".");
+        //             }
+        //         }
+        //         printk(KERN_CONT "|\n");
+        //     }
+        //     printk("==============================EBPF PAGE DUMP END==============================\n");
+        // }
+
         VID* edges = (VID*)(buffer + offset_in_buf);
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
@@ -175,6 +203,16 @@ class ScatterWorker {
 
         const uint64_t page_start = (uint64_t)pid * PAGE_SIZE;
         const uint64_t page_end = page_start + PAGE_SIZE;
+
+        printf("------edge vertex dump -------\n");
+        VID* edges_tmp = (VID*)(buffer);
+        for (uint32_t i = 0; i < 1024; i++) {
+            if(i != 0 && i%32 == 0)
+                printf("\n");
+            VID dst = edges_tmp[i];
+            printf("%d ",dst);
+        }
+        printf("\n");
 
         VID vid = vid_start;
         while (vid <= vid_end) {
