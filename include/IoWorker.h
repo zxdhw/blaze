@@ -54,7 +54,7 @@ class IoWorker {
     }
 
     void init_bpf_program(){
-        _bpf_fd = load_bpf_program("/home/femu/blaze/magazine/magazine.o");
+        _bpf_fd = load_bpf_program("/home/zhengxd/blaze/magazine/magazine.o");
     }
         
     void initMagazine ()
@@ -313,7 +313,7 @@ class IoWorker {
         Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
-        pscratch->scartch = 0;
+        pscratch->scratch = 0;
         _buffer_len = used_pages * PAGE_SIZE;
 
         while (beg < end && _buffer_len < MAX_BIO_SIZE ) {
@@ -348,7 +348,7 @@ class IoWorker {
                 pscratch->offset[index] = offset;
                 pscratch->length[index] = cur_pages;
                 pscratch->max_index = index;
-                pscratch->scartch = 1;
+                pscratch->scratch = 1;
                 index++;
 
                 if(!(beg < end) || !(offset_pages < max_pages) ) break;
@@ -433,7 +433,7 @@ class IoWorker {
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
         pscratch->max_index = 0;
-        pscratch->scartch = 0;
+        pscratch->scratch = 0;
         _buffer_len = used_pages * PAGE_SIZE;
         PAGEID page_id;
 
@@ -453,7 +453,7 @@ class IoWorker {
                 pscratch->offset[index] = offset;
                 pscratch->length[index] = 1;
                 pscratch->max_index = index;
-                pscratch->scartch = 1;
+                pscratch->scratch = 1;
                 pscratch->buffer_len = _buffer_len;
                 index++;
                 page_bitmap->set_bit(page_id);

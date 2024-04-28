@@ -10,10 +10,10 @@
 
 
 #path
-APP_PATH='/home/femu/blaze/build/bin'
+APP_PATH='/home/zhengxd/blaze/build/bin'
 # APP_PATH='/home/femu/blaze-old/blaze/build/bin'
-INDEX='/home/femu/dataset/'
-DATA='/home/femu/dataset/'
+INDEX='/home/zhengxd/dataset/graph'
+DATA='/home/zhengxd/dataset/graph'
 
 # parameter
 COMPUTEWORKERS=2
@@ -33,7 +33,7 @@ for ((n=0; n<TIMES; n++)); do
         for ((i=0; i<${#index[@]}; i++)); do
             k="${index[i]}"
             j="${data[i]}"
-            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} | head -n 100000 > ${EBPF}_${e}_${k}_dump.out
+            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} | head -n 100000 > ${EBPF}_${e}_${k}.out
             # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE $INDEX/${k} $DATA/${j} >> nromal.out
         done
     done

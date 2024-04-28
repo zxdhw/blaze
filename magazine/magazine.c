@@ -9,7 +9,7 @@
 #include "ebpf_types.h"
 
 char LICENSE[] SEC("license") = "GPL";
-
+// #define PAGE_SIZE 4096
 
 /* read csr info， put into active queue
  * @param csr: data
@@ -18,19 +18,26 @@ char LICENSE[] SEC("license") = "GPL";
 static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
     dbg_print("-------set_next_block enter----\n");
 
-    if(mg->scartch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
+    if (!mg) return;
+    // if(mg->curr_index < 0 || mg->max_index >= IO_INFO) return;
+
+    if(mg->scratch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
+
         /*set next io*/
-        context->next_addr[0] = mg->offset[mg->curr_index];
-         dbg_print("-------next_addr is %lld----\n");
-        context->size[0] = mg->length[mg->curr_index] * PAGE_SIZE;
+        context->next_addr[0] = mg->offset[mg->curr_index & INDEX_MASK];
+        dbg_print("-------next_addr is %lld----\n",context->next_addr[0]);
+        if(mg->length[mg->curr_index & INDEX_MASK] > PAGE_MAX) return;
+        // unsigned long long length = mg->length[mg->curr_index] * PAGE_SIZE;
+        context->size[0] = mg->length[mg->curr_index & INDEX_MASK] * PAGE_SIZE;
         mg->curr_index++;
-        mg->buffer_offset += mg->length[mg->curr_index];
+        // mg->buffer_offset += mg->length[mg->curr_index];
         // if(mg->buffer_offset > mg->buffer_len){
         //     context->done = 1;
         //     // context->next_addr[0] = 0;
         //     // context->size[0] = 0;
         //     return;
         // }
+        
     } else {
         /* finish bfs_bpf*/
         context->done = 1;

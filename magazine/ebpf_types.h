@@ -15,19 +15,20 @@ typedef unsigned long long offset_m; //以page为单位
 
 #define PAGE_SIZE 4096
 #define SCRATCH_SIZE 4096   // 4KB
-#define IO_INFO  150        // 最大可以寄生的IO数量
+#define IO_INFO  128        // 最大可以寄生的IO数量
 #define MAX_BIO_SIZE 128 * 1024       // 单次IO（包括寄生）的最大大小 128KB 
 #define IO_MAX_PAGES_PER_MG 32
-#define PTR_SIZE sizeof(ptr__t)
+#define PTR_SIZE sizeof(ptr__m)
 
 
 /* MASK to prevent out of bounds memory access*/
 #define BLOCK_OFFSET_MASK SCRATCH_SIZE
-#define INFTY_64 vertex_t(1<<63) //将默认值设为INFTY_64
+#define INFTY_MAX ((ptr__m)1 << 63) //将默认值设为INFTY_64
 
 
-// Node offset "encoding"
-#define FILE_MASK ((ptr__m)1 << 63)
+// page
+#define PAGE_MAX 128
+#define INDEX_MASK (IO_INFO-1)
 
 /*struct used to communicate with BPF function via scratch buffer */
 typedef struct _Scratch {
@@ -40,8 +41,8 @@ typedef struct _Scratch {
     length_m    buffer_len;      // buffer最大长度
     length_m    max_index;       // 最大索引；
     length_m    curr_index;      // 当前索引 0
-    length_m    scartch;         // 0 不使用scratch，其余使用。
-    length_m    unused[57];
+    length_m    scratch;         // 0 不使用scratch，其余使用。
+    length_m    unused[123];
 }Scratch;
 
 // _Static_assert (sizeof(Scratch) == SCRATCH_SIZE, "struct too large for scratch page");

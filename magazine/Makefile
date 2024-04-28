@@ -2,7 +2,7 @@ LLC ?= llc
 CLANG ?= clang
 CC ?= gcc
 BPF_CFLAGS ?= -I$(LIBBPF_DIR)/build/usr/
-
+CFLAGS ?= -I/usr/src/linux-headers-$(uname -r)/include
 magazine.o: magazine.c ebpf_types.h
 
 %.o: %.c
@@ -10,6 +10,7 @@ magazine.o: magazine.c ebpf_types.h
 	    -target bpf \
 	    -D __BPF_TRACING__ \
 	    $(BPF_CFLAGS) \
+		$(CFLAGS) \
 	    -Wall \
 	    -Wno-pointer-sign \
 	    -Wno-compare-distinct-pointer-types \
