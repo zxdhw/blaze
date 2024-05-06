@@ -10,6 +10,7 @@
 #include "AsyncIo.h"
 #include "Queue.h"
 #include "Param.h"
+#include <cstdint>
 #include <unordered_set>
 #include "helpers.h"
 
@@ -151,6 +152,28 @@ class IoWorker {
 
         auto beg = sparse_page_frontier->begin();
         auto const end = sparse_page_frontier->end();
+
+        auto beg_tmp = sparse_page_frontier->begin();
+        PAGEID page_id_tmp;
+        while (beg_tmp != end) {
+            page_id_tmp = *beg_tmp;
+
+            if (page_bitmap->get_bit(page_id_tmp)) {
+                beg_tmp++;
+                continue;
+            }
+            printf("----pid is %d----\n", page_id_tmp);
+            page_bitmap->set_bit(page_id_tmp);
+            beg_tmp++;
+        }
+
+        beg_tmp = sparse_page_frontier->begin();
+        while (beg_tmp != end) {
+            page_id_tmp = *beg_tmp;
+            // printf("----reset pid is %d----\n", page_id_tmp);
+            page_bitmap->reset_bit(page_id_tmp);
+            beg_tmp++;
+        }
 
         while (!_requested_all || _received < _queued) {
             if(is_use_ebpf(_use_ebpf)){
@@ -449,7 +472,7 @@ class IoWorker {
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 _buffer_len += PAGE_SIZE;
 
-                pscratch->spage[index] = page_id;
+                pscratch->spage[index] = (uint64_t)page_id;
                 pscratch->offset[index] = offset;
                 pscratch->length[index] = 1;
                 pscratch->max_index = index;
@@ -457,6 +480,8 @@ class IoWorker {
                 pscratch->buffer_len = _buffer_len;
                 index++;
                 page_bitmap->set_bit(page_id);
+
+                printf("----xrp pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             }
         }
     }
@@ -473,6 +498,7 @@ class IoWorker {
         uint32_t index = 0;
         //预分配magazine内存，数量与aio 队列保持一致。
         char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
+        printf("----scratch size is %lu----\n", sizeof(*_scratch));
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             page_id = *beg;
@@ -489,7 +515,7 @@ class IoWorker {
 
             // wait until free pages are available
             while (sync.get_num_free_pages(_id) < magazine_pages) {}
-            sync.add_num_free_pages(_id, (int64_t)magazine_pages*(-1));
+            sync.add_num_free_pages(_id, magazine_pages*(-1));
 
             buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
             offset = (uint64_t)page_id * PAGE_SIZE;
@@ -497,9 +523,8 @@ class IoWorker {
             memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
             IoItem* item = new IoItem(_id, page_id, 1, buf,1, &_scratch_buf[index]);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
+            printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             _scratch_bufs_tmp[index] = &_scratch_buf[index];
-
-            // page_bitmap->set_bit(page_id);
             index++;
         }
 

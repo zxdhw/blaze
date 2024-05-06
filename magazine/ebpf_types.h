@@ -28,7 +28,7 @@ typedef unsigned long long offset_m; //以page为单位
 
 // page
 #define PAGE_MAX 128
-#define INDEX_MASK (IO_INFO-1)
+#define INDEX_MASK (IO_INFO - 1)
 
 /*struct used to communicate with BPF function via scratch buffer */
 typedef struct _Scratch {

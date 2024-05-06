@@ -11,23 +11,21 @@
 char LICENSE[] SEC("license") = "GPL";
 // #define PAGE_SIZE 4096
 
-/* read csr info， put into active queue
- * @param csr: data
- * @param bfs: metadata
+/* read scratch info
+ * @param mg: scratch
+ * @param contex: ebpf info
  */
 static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
     dbg_print("-------set_next_block enter----\n");
-
-    if (!mg) return;
     // if(mg->curr_index < 0 || mg->max_index >= IO_INFO) return;
 
     if(mg->scratch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
 
         /*set next io*/
         context->next_addr[0] = mg->offset[mg->curr_index & INDEX_MASK];
-        dbg_print("-------next_addr is %lld----\n",context->next_addr[0]);
+        dbg_print("-------next_addr is %lld, pid is %d----\n",context->next_addr[0], mg->spage[mg->curr_index & INDEX_MASK]);
+        dbg_print("-------index_mask is %d----\n", INDEX_MASK);
         if(mg->length[mg->curr_index & INDEX_MASK] > PAGE_MAX) return;
-        // unsigned long long length = mg->length[mg->curr_index] * PAGE_SIZE;
         context->size[0] = mg->length[mg->curr_index & INDEX_MASK] * PAGE_SIZE;
         mg->curr_index++;
         // mg->buffer_offset += mg->length[mg->curr_index];

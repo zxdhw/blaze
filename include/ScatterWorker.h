@@ -107,40 +107,13 @@ class ScatterWorker {
             degree -= (offset_end - page_end) >> EDGE_WIDTH_BITS;
         }
 
-
-        // void ebpf_dump_page(uint8_t *page_image, uint64_t size) {
-        //     int row, column, addr;
-        //     uint64_t page_offset = 0;
-        //     printk("=============================EBPF PAGE DUMP START=============================\n");
-        //     for (row = 0; row < size / 16; ++row) {
-        //         printk(KERN_CONT "%08llx  ", page_offset + 16 * row);
-        //         for (column = 0; column < 16; ++column) {
-        //             addr = 16 * row + column;
-        //             printk(KERN_CONT "%02x ", page_image[addr]);
-        //             if (column == 7 || column == 15) {
-        //                 printk(KERN_CONT " ");
-        //             }
-        //         }
-        //         printk(KERN_CONT "|");
-        //         for (column = 0; column < 16; ++column) {
-        //             addr = 16 * row + column;
-        //             if (page_image[addr] >= '!' && page_image[addr] <= '~') {
-        //                 printk(KERN_CONT "%c", page_image[addr]);
-        //             } else {
-        //                 printk(KERN_CONT ".");
-        //             }
-        //         }
-        //         printk(KERN_CONT "|\n");
-        //     }
-        //     printk("==============================EBPF PAGE DUMP END==============================\n");
-        // }
-
         VID* edges = (VID*)(buffer + offset_in_buf);
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
-            printf("----edge vertex is %lu -------\n",dst);
-            if (func.cond(dst))
+            if (func.cond(dst)){
+                printf("----edge vertex is %lu -------\n",dst);
                 _bins->append(_id, dst, func.scatter(vid, dst));
+            }
         }
 
         return true;
@@ -151,7 +124,7 @@ class ScatterWorker {
         PAGEID ppid_start = item.page;
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
-        printf("----nromal pid is %lu, endid is %lu -------\n",ppid_start,ppid_end);
+        printf("----nromal pid is %lu -------\n",ppid_start);
         while (ppid_start < ppid_end) {
             /* blaze的数据分布  
              *  disk0----disk1----disk2
@@ -174,7 +147,7 @@ class ScatterWorker {
                 ppid_start = pscratch->spage[index];
                 const PAGEID ppid_end_ebpf   = ppid_start + pscratch->length[index];
                 
-                printf("----scratch pid is %lu, endid is %lu -------\n",ppid_start,ppid_end_ebpf);
+                printf("----scratch pid is %lu -------\n",ppid_start);
                 while (ppid_start < ppid_end_ebpf) {
                     const PAGEID pid = ppid_start * _num_disks + item.disk_id;
                     processFetchedPage(graph, func, pid, buffer);
@@ -204,15 +177,15 @@ class ScatterWorker {
         const uint64_t page_start = (uint64_t)pid * PAGE_SIZE;
         const uint64_t page_end = page_start + PAGE_SIZE;
 
-        printf("------edge vertex dump -------\n");
-        VID* edges_tmp = (VID*)(buffer);
-        for (uint32_t i = 0; i < 1024; i++) {
-            if(i != 0 && i%32 == 0)
-                printf("\n");
-            VID dst = edges_tmp[i];
-            printf("%d ",dst);
-        }
-        printf("\n");
+        // printf("------edge vertex dump -------\n");
+        // VID* edges_tmp = (VID*)(buffer);
+        // for (uint32_t i = 0; i < 1024; i++) {
+        //     if(i != 0 && i%32 == 0)
+        //         printf("\n");
+        //     VID dst = edges_tmp[i];
+        //     printf("%d ",dst);
+        // }
+        // printf("\n");
 
         VID vid = vid_start;
         while (vid <= vid_end) {
