@@ -153,27 +153,27 @@ class IoWorker {
         auto beg = sparse_page_frontier->begin();
         auto const end = sparse_page_frontier->end();
 
-        auto beg_tmp = sparse_page_frontier->begin();
-        PAGEID page_id_tmp;
-        while (beg_tmp != end) {
-            page_id_tmp = *beg_tmp;
+        // auto beg_tmp = sparse_page_frontier->begin();
+        // PAGEID page_id_tmp;
+        // while (beg_tmp != end) {
+        //     page_id_tmp = *beg_tmp;
 
-            if (page_bitmap->get_bit(page_id_tmp)) {
-                beg_tmp++;
-                continue;
-            }
-            printf("----pid is %d----\n", page_id_tmp);
-            page_bitmap->set_bit(page_id_tmp);
-            beg_tmp++;
-        }
+        //     if (page_bitmap->get_bit(page_id_tmp)) {
+        //         beg_tmp++;
+        //         continue;
+        //     }
+        //     printf("----pid is %d----\n", page_id_tmp);
+        //     page_bitmap->set_bit(page_id_tmp);
+        //     beg_tmp++;
+        // }
 
-        beg_tmp = sparse_page_frontier->begin();
-        while (beg_tmp != end) {
-            page_id_tmp = *beg_tmp;
-            // printf("----reset pid is %d----\n", page_id_tmp);
-            page_bitmap->reset_bit(page_id_tmp);
-            beg_tmp++;
-        }
+        // beg_tmp = sparse_page_frontier->begin();
+        // while (beg_tmp != end) {
+        //     page_id_tmp = *beg_tmp;
+        //     // printf("----reset pid is %d----\n", page_id_tmp);
+        //     page_bitmap->reset_bit(page_id_tmp);
+        //     beg_tmp++;
+        // }
 
         while (!_requested_all || _received < _queued) {
             if(is_use_ebpf(_use_ebpf)){
@@ -338,6 +338,7 @@ class IoWorker {
         pscratch->curr_index = 0;
         pscratch->scratch = 0;
         _buffer_len = used_pages * PAGE_SIZE;
+        pscratch->complete = used_pages * PAGE_SIZE;
 
         while (beg < end && _buffer_len < MAX_BIO_SIZE ) {
             // skip an entire word in bitmap if possible
@@ -354,14 +355,14 @@ class IoWorker {
                 // check continuous pages up to 128KB
                 // check beg is not host io
                 PAGEID page_id = beg;
-                uint32_t cur_pages = 0;
-                while (page_bitmap->get_bit(++beg)
-                             && cur_pages < IO_MAX_PAGES_PER_REQ
-                             && beg < end 
-                             && cur_pages < max_pages - offset_pages)
-                {
-                    cur_pages++;
-                }
+                uint32_t cur_pages = 1;
+                // while (page_bitmap->get_bit(++beg)
+                //              && cur_pages < IO_MAX_PAGES_PER_REQ
+                //              && beg < end 
+                //              && cur_pages < max_pages - offset_pages)
+                // {
+                //     cur_pages++;
+                // }
 
                 offset_pages += cur_pages;
                 offset = (uint64_t)page_id * PAGE_SIZE;
@@ -406,12 +407,13 @@ class IoWorker {
                 // check continuous pages up to 16kB
                 PAGEID page_id = beg;
                 uint32_t num_pages = 1;
-                while (page_bitmap->get_bit(++beg)
-                             && beg < end 
-                             && num_pages < IO_MAX_PAGES_PER_REQ)
-                {
-                    num_pages++;
-                }
+                beg++;
+                // while (page_bitmap->get_bit(++beg)
+                //              && beg < end 
+                //              && num_pages < IO_MAX_PAGES_PER_REQ)
+                // {
+                //     num_pages++;
+                // }
                 // magazine 填充
                 magazine_dense(page_bitmap,beg,end,num_pages,index);
                 uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
@@ -421,13 +423,13 @@ class IoWorker {
                 sync.add_num_free_pages(_id, (int64_t)magazine_pages * (-1));
 
                 buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
-                size_t data_len = num_pages * PAGE_SIZE;
+                // size_t data_block = PAGE_SIZE;
                 offset = (uint64_t)page_id * PAGE_SIZE;
 
                 memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
                 memset(&_scratch_buf_tmp[index],0,sizeof(*_scratch));
                 IoItem* item = new IoItem(_id, page_id, num_pages, buf,1, &_scratch_buf[index]);
-                enqueueRequest_xrp(buf, data_len, _buffer_len, offset, item);
+                enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
                 _scratch_bufs_tmp[index] = &_scratch_buf[index];
             }
         }
@@ -448,7 +450,7 @@ class IoWorker {
 
     //zhengxd: 向magazine中填充IO
     void magazine_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,
-                            const CountableBag<PAGEID>::iterator& end, uint32_t used_pages, uint32_t s_index){
+                    const CountableBag<PAGEID>::iterator& end, uint32_t used_pages, uint32_t s_index){
 
         uint64_t offset = 0, index = 0;
         // uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
@@ -458,6 +460,7 @@ class IoWorker {
         pscratch->max_index = 0;
         pscratch->scratch = 0;
         _buffer_len = used_pages * PAGE_SIZE;
+        pscratch->complete = used_pages * PAGE_SIZE;
         PAGEID page_id;
 
         while (beg != end && _buffer_len < MAX_BIO_SIZE) {
@@ -525,7 +528,10 @@ class IoWorker {
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
             printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             _scratch_bufs_tmp[index] = &_scratch_buf[index];
+            // printf("----buf-----\n");
+            // ebpf_dump_page((unsigned char *)(&_scratch_buf[index]), 4096);
             index++;
+            
         }
 
         if (beg == end) _requested_all = true;
@@ -540,6 +546,34 @@ class IoWorker {
         if (ret > 0) {
             _sent += ret;
         }
+    }
+
+
+    void ebpf_dump_page(uint8_t *page_image, uint64_t size) {
+        int row, column, addr;
+        uint64_t page_offset = 0;
+        printf("=============================EBPF PAGE DUMP START=============================\n");
+        for (row = 0; row < size / 16; ++row) {
+            printf("%08lx  ", page_offset + 16 * row);
+            for (column = 0; column < 16; ++column) {
+                addr = 16 * row + column;
+                printf("%02x ", page_image[addr]);
+                if (column == 7 || column == 15) {
+                    printf( " ");
+                }
+            }
+            printf("|");
+            for (column = 0; column < 16; ++column) {
+            	addr = 16 * row + column;
+            	if (page_image[addr] >= '!' && page_image[addr] <= '~') {
+            		printf( "%c", page_image[addr]);
+            	} else {
+            		printf( ".");
+            	}
+            }
+            printf("|\n");
+        }
+        printf("==============================EBPF PAGE DUMP END==============================\n");
     }
 
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {

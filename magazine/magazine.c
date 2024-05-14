@@ -27,7 +27,13 @@ static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
         dbg_print("-------index_mask is %d----\n", INDEX_MASK);
         if(mg->length[mg->curr_index & INDEX_MASK] > PAGE_MAX) return;
         context->size[0] = mg->length[mg->curr_index & INDEX_MASK] * PAGE_SIZE;
+        
+        if(mg->curr_index > 0){
+            mg->complete += mg->length[ (mg->curr_index -1) & INDEX_MASK] * PAGE_SIZE;
+        }
+        context->size[1] = mg->complete;
         mg->curr_index++;
+        
         // mg->buffer_offset += mg->length[mg->curr_index];
         // if(mg->buffer_offset > mg->buffer_len){
         //     context->done = 1;

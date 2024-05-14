@@ -42,7 +42,8 @@ typedef struct _Scratch {
     length_m    max_index;       // 最大索引；
     length_m    curr_index;      // 当前索引 0
     length_m    scratch;         // 0 不使用scratch，其余使用。
-    length_m    unused[123];
+    length_m    complete;        // 完成的data
+    length_m    unused[122];
 }Scratch;
 
 // _Static_assert (sizeof(Scratch) == SCRATCH_SIZE, "struct too large for scratch page");

@@ -177,16 +177,6 @@ class ScatterWorker {
         const uint64_t page_start = (uint64_t)pid * PAGE_SIZE;
         const uint64_t page_end = page_start + PAGE_SIZE;
 
-        // printf("------edge vertex dump -------\n");
-        // VID* edges_tmp = (VID*)(buffer);
-        // for (uint32_t i = 0; i < 1024; i++) {
-        //     if(i != 0 && i%32 == 0)
-        //         printf("\n");
-        //     VID dst = edges_tmp[i];
-        //     printf("%d ",dst);
-        // }
-        // printf("\n");
-
         VID vid = vid_start;
         while (vid <= vid_end) {
             applyFunction(graph, func, vid, page_start, page_end, buffer);
