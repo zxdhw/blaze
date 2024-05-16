@@ -110,7 +110,6 @@ int main(int argc, char **argv) {
 
     galois::StatTimer time("Time", "BFS_MAIN");
     time.start();
-
     while (!frontier->empty()) {
         Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking, use_ebpf);
         delete frontier;

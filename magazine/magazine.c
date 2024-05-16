@@ -16,15 +16,14 @@ char LICENSE[] SEC("license") = "GPL";
  * @param contex: ebpf info
  */
 static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
-    dbg_print("-------set_next_block enter----\n");
+    // dbg_print("-------set_next_block enter----\n");
     // if(mg->curr_index < 0 || mg->max_index >= IO_INFO) return;
 
     if(mg->scratch && mg->curr_index < IO_INFO && mg->curr_index <= mg->max_index){
-
         /*set next io*/
         context->next_addr[0] = mg->offset[mg->curr_index & INDEX_MASK];
-        dbg_print("-------next_addr is %lld, pid is %d----\n",context->next_addr[0], mg->spage[mg->curr_index & INDEX_MASK]);
-        dbg_print("-------index_mask is %d----\n", INDEX_MASK);
+        // dbg_print("-------next_addr is %lld, pid is %d----\n",context->next_addr[0], mg->spage[mg->curr_index & INDEX_MASK]);
+        // dbg_print("-------index_mask is %d----\n", INDEX_MASK);
         if(mg->length[mg->curr_index & INDEX_MASK] > PAGE_MAX) return;
         context->size[0] = mg->length[mg->curr_index & INDEX_MASK] * PAGE_SIZE;
         
@@ -34,13 +33,6 @@ static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
         context->size[1] = mg->complete;
         mg->curr_index++;
         
-        // mg->buffer_offset += mg->length[mg->curr_index];
-        // if(mg->buffer_offset > mg->buffer_len){
-        //     context->done = 1;
-        //     // context->next_addr[0] = 0;
-        //     // context->size[0] = 0;
-        //     return;
-        // }
         
     } else {
         /* finish bfs_bpf*/

@@ -1,7 +1,8 @@
 
 # 忽略 build 文件夹
+.cache/
 build/
-
+compile_commands.json
 # 忽略 analysis 文件夹中的所有文件
 !analysis
 
@@ -10,3 +11,4 @@ analysis/**/*.txt
 analysis/**/*.out
 analysis/**/*.log
 analysis/**/*.png
+analysis/**/*.old

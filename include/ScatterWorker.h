@@ -111,7 +111,7 @@ class ScatterWorker {
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
             if (func.cond(dst)){
-                printf("----edge vertex is %lu -------\n",dst);
+                // printf("----edge vertex is %u -------\n",dst);
                 _bins->append(_id, dst, func.scatter(vid, dst));
             }
         }
@@ -124,7 +124,7 @@ class ScatterWorker {
         PAGEID ppid_start = item.page;
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
-        printf("----nromal pid is %lu -------\n",ppid_start);
+        // printf("----nromal pid is %u -------\n",ppid_start);
         while (ppid_start < ppid_end) {
             /* blaze的数据分布  
              *  disk0----disk1----disk2
@@ -140,14 +140,14 @@ class ScatterWorker {
         if(item.scratch){
             Scratch* pscratch = (Scratch*) item._scratch_buf;
             // pscratch->curr_index已经在magazine中迭代到max_index+1
-            printf("----scratch resubmission times: %lu-----\n",pscratch->curr_index);
+            // printf("----scratch resubmission times: %llu-----\n",pscratch->curr_index);
             uint64_t index = 0;
             while( pscratch->scratch && index <= pscratch->max_index){
 
                 ppid_start = pscratch->spage[index];
                 const PAGEID ppid_end_ebpf   = ppid_start + pscratch->length[index];
                 
-                printf("----scratch pid is %lu -------\n",ppid_start);
+                // printf("----scratch pid is %u -------\n",ppid_start);
                 while (ppid_start < ppid_end_ebpf) {
                     const PAGEID pid = ppid_start * _num_disks + item.disk_id;
                     processFetchedPage(graph, func, pid, buffer);

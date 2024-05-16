@@ -13,10 +13,12 @@ APP_PATH='/home/zhengxd/blaze/build/bin'
 # APP_PATH='/home/femu/blaze-old/blaze/build/bin'
 INDEX='/home/zhengxd/dataset/graph'
 DATA='/home/zhengxd/dataset/graph'
+RESULT='/home/zhengxd/blaze/analysis/graph/dapu13'
 
 # parameter
-COMPUTEWORKERS=2
-STARTNODE=101
+COMPUTEWORKERS=16
+STARTNODE=50395005
+# 101
 EBPF=1
 TIMES=1
 declare -a apps=("bfs")
@@ -32,7 +34,7 @@ for ((n=0; n<TIMES; n++)); do
         for ((i=0; i<${#index[@]}; i++)); do
             k="${index[i]}"
             j="${data[i]}"
-            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} | head -n 10000 > ${EBPF}_${e}_${k}_vertex.out
+            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} > ${RESULT}/${EBPF}_${COMPUTEWORKERS}_${e}_${k}.out
             # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE $INDEX/${k} $DATA/${j} >> nromal.out
         done
     done

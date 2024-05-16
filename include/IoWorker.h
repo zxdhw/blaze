@@ -3,6 +3,7 @@
 
 #include "Type.h"
 #include "Graph.h"
+#include "ebpf_types.h"
 #include "galois/Bag.h"
 #include "Param.h"
 #include "IoSync.h"
@@ -11,6 +12,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include <cstdint>
+#include <cstdlib>
 #include <unordered_set>
 #include "helpers.h"
 
@@ -55,19 +57,19 @@ class IoWorker {
     }
 
     void init_bpf_program(){
-        _bpf_fd = load_bpf_program("/home/zhengxd/blaze/magazine/magazine.o");
+        _bpf_fd = load_bpf_program("/home/zxd/blaze/magazine/magazine.o");
     }
         
     void initMagazine ()
     {
         //临时使用，通过memcpy拷贝给传入内核的_scratch_buf
-        _scratch_buf_tmp = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
+        // _scratch_buf_tmp = (char*)calloc(1, sizeof(*_scratch));
         // 临时使用，与iocbs相同，内核拷贝完成后返回，才提交下一批请求。因此可以重复使用。
-        _scratch_bufs_tmp = (char**)calloc(IO_QUEUE_DEPTH, sizeof(*_scratchs));
+        _scratch_bufs_tmp = (char**)calloc(IO_QUEUE_DEPTH, sizeof(ptr__m));
     }
     
     void deinitMagazine() {
-        free(_scratch_buf_tmp);
+        // free(_scratch_buf_tmp);
         free(_scratch_bufs_tmp);
     }
 
@@ -329,11 +331,14 @@ class IoWorker {
         }
     }
         //zhengxd: 向magazine中填充IO
-    void magazine_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint32_t used_pages, uint32_t s_index){
+    void magazine_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint32_t used_pages,char* _scratch_buf){
 
-        uint32_t offset = 0, offset_pages = 0, index = 0;
+        PAGEID page_id;
+        uint32_t cur_pages;
+        uint64_t offset = 0;
+        uint32_t offset_pages = 0, index = 0;
         uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
+        Scratch* pscratch = (Scratch*)_scratch_buf;
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
         pscratch->scratch = 0;
@@ -354,8 +359,8 @@ class IoWorker {
             } else {
                 // check continuous pages up to 128KB
                 // check beg is not host io
-                PAGEID page_id = beg;
-                uint32_t cur_pages = 1;
+                page_id = beg;
+                cur_pages = 1;
                 // while (page_bitmap->get_bit(++beg)
                 //              && cur_pages < IO_MAX_PAGES_PER_REQ
                 //              && beg < end 
@@ -363,19 +368,17 @@ class IoWorker {
                 // {
                 //     cur_pages++;
                 // }
-
                 offset_pages += cur_pages;
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 _buffer_len += cur_pages * PAGE_SIZE;
 
                 pscratch->spage[index] = page_id;
                 pscratch->offset[index] = offset;
-                pscratch->length[index] = cur_pages;
+                pscratch->length[index] = 1;
                 pscratch->max_index = index;
                 pscratch->scratch = 1;
                 index++;
-
-                if(!(beg < end) || !(offset_pages < max_pages) ) break;
+                beg++;
             }
         }
         pscratch->buffer_len = _buffer_len;
@@ -387,9 +390,9 @@ class IoWorker {
         char* buf;
         uint64_t offset;
         void* data;
+        PAGEID page_id;
         uint64_t index = 0;
-        //分配magazine内存
-        char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
+        uint32_t num_pages;
 
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             // skip an entire word in bitmap if possible
@@ -405,8 +408,8 @@ class IoWorker {
 
             } else {
                 // check continuous pages up to 16kB
-                PAGEID page_id = beg;
-                uint32_t num_pages = 1;
+                page_id = beg;
+                num_pages = 1;
                 beg++;
                 // while (page_bitmap->get_bit(++beg)
                 //              && beg < end 
@@ -415,22 +418,25 @@ class IoWorker {
                 //     num_pages++;
                 // }
                 // magazine 填充
-                magazine_dense(page_bitmap,beg,end,num_pages,index);
+                char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+                memset(_scratch_buf, 0, PAGE_SIZE);
+                magazine_dense(page_bitmap,beg,end,num_pages,_scratch_buf);
                 uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
                 // wait until free pages are available
                 while (sync.get_num_free_pages(_id) < magazine_pages) {}
                 sync.add_num_free_pages(_id, (int64_t)magazine_pages * (-1));
-
                 buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
-                // size_t data_block = PAGE_SIZE;
                 offset = (uint64_t)page_id * PAGE_SIZE;
 
-                memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
-                memset(&_scratch_buf_tmp[index],0,sizeof(*_scratch));
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf,1, &_scratch_buf[index]);
+                // aio init
+                IoItem* item = new IoItem(_id, page_id, 1, buf,1, _scratch_buf);
                 enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
-                _scratch_bufs_tmp[index] = &_scratch_buf[index];
+                _scratch_bufs_tmp[index] = _scratch_buf;
+                index++;
+                // debug info : char (1字节)， SCRATCH （4096字节）
+                // dump_page((unsigned char *)(&_scratch_buf[index]), 4096);
+                // printf("----io submit: ptr is %p----\n", _scratch_buf);
             }
         }
 
@@ -446,15 +452,16 @@ class IoWorker {
         if (ret > 0) {
             _sent += ret;
         }
+        memset(_scratch_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
     //zhengxd: 向magazine中填充IO
     void magazine_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,
-                    const CountableBag<PAGEID>::iterator& end, uint32_t used_pages, uint32_t s_index){
+                    const CountableBag<PAGEID>::iterator& end, uint32_t used_pages,char* _scratch_buf){
 
         uint64_t offset = 0, index = 0;
         // uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)&_scratch_buf_tmp[s_index];
+        Scratch* pscratch = (Scratch*)_scratch_buf;
         pscratch->buffer_offset = used_pages;
         pscratch->curr_index = 0;
         pscratch->max_index = 0;
@@ -480,13 +487,12 @@ class IoWorker {
                 pscratch->length[index] = 1;
                 pscratch->max_index = index;
                 pscratch->scratch = 1;
-                pscratch->buffer_len = _buffer_len;
                 index++;
                 page_bitmap->set_bit(page_id);
-
-                printf("----xrp pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
+                // printf("----xrp pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             }
         }
+        pscratch->buffer_len = _buffer_len;
     }
 
     void submitTasks_sparse_ebpf(CountableBag<PAGEID>::iterator& beg,
@@ -499,9 +505,6 @@ class IoWorker {
         void* data;
         PAGEID page_id;
         uint32_t index = 0;
-        //预分配magazine内存，数量与aio 队列保持一致。
-        char* _scratch_buf = (char*)calloc(IO_QUEUE_DEPTH, sizeof(*_scratch));
-        printf("----scratch size is %lu----\n", sizeof(*_scratch));
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             page_id = *beg;
@@ -513,25 +516,29 @@ class IoWorker {
             // 提前加锁，避免magazine_sparse时重复下发请求
             page_bitmap->set_bit(page_id);
             beg++;
-            magazine_sparse(page_bitmap,beg,end,1,index);
+
+            //scratch，无论scratch是否包含数据，都下发一个scratch。
+            char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+            memset(_scratch_buf, 0, PAGE_SIZE);
+            magazine_sparse(page_bitmap,beg,end,1,_scratch_buf);
             uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
             // wait until free pages are available
             while (sync.get_num_free_pages(_id) < magazine_pages) {}
             sync.add_num_free_pages(_id, magazine_pages*(-1));
-
             buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            //scratch，无论scratch是否包含数据，都下发一个scratch。
-            memcpy(&_scratch_buf[index], &_scratch_buf_tmp[index], sizeof(*_scratch));
-            IoItem* item = new IoItem(_id, page_id, 1, buf,1, &_scratch_buf[index]);
+
+            // aio init
+            IoItem* item = new IoItem(_id, page_id, 1, buf,1, _scratch_buf);
             enqueueRequest_xrp(buf, PAGE_SIZE, _buffer_len, offset, item);
-            printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
-            _scratch_bufs_tmp[index] = &_scratch_buf[index];
-            // printf("----buf-----\n");
-            // ebpf_dump_page((unsigned char *)(&_scratch_buf[index]), 4096);
+            // printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
+            _scratch_bufs_tmp[index] = _scratch_buf;
             index++;
-            
+            // debug info
+            // dump_page((unsigned char *)(&_scratch_buf[index]), 4096);
+            // printf("----io submit: ptr is %p----\n", _scratch_buf);
+           
         }
 
         if (beg == end) _requested_all = true;
@@ -546,34 +553,7 @@ class IoWorker {
         if (ret > 0) {
             _sent += ret;
         }
-    }
-
-
-    void ebpf_dump_page(uint8_t *page_image, uint64_t size) {
-        int row, column, addr;
-        uint64_t page_offset = 0;
-        printf("=============================EBPF PAGE DUMP START=============================\n");
-        for (row = 0; row < size / 16; ++row) {
-            printf("%08lx  ", page_offset + 16 * row);
-            for (column = 0; column < 16; ++column) {
-                addr = 16 * row + column;
-                printf("%02x ", page_image[addr]);
-                if (column == 7 || column == 15) {
-                    printf( " ");
-                }
-            }
-            printf("|");
-            for (column = 0; column < 16; ++column) {
-            	addr = 16 * row + column;
-            	if (page_image[addr] >= '!' && page_image[addr] <= '~') {
-            		printf( "%c", page_image[addr]);
-            	} else {
-            		printf( ".");
-            	}
-            }
-            printf("|\n");
-        }
-        printf("==============================EBPF PAGE DUMP END==============================\n");
+        memset(_scratch_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {
@@ -659,12 +639,9 @@ class IoWorker {
     int                     _bpf_fd;
     char*                   _scratch_buf_tmp;
     char**                  _scratch_bufs_tmp;
-    Scratch*                _scratch;
-    Scratch**               _scratchs;
     uint32_t                _scratch_pages;
     uint32_t                _use_ebpf;
     size_t                  _buffer_len; // bytes
-
 };
 
 } // namespace blaze
