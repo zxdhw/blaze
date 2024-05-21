@@ -56,9 +56,9 @@ class IoWorker {
         free(_events);
     }
 
-    void init_bpf_program(){
-        _bpf_fd = load_bpf_program("/home/zxd/blaze/magazine/magazine.o");
-    }
+    // void init_bpf_program(){
+    //     _bpf_fd = load_bpf_program("/home/zxd/blaze/magazine/magazine.o");
+    // }
         
     void initMagazine ()
     {
@@ -78,9 +78,9 @@ class IoWorker {
             Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
 
         _use_ebpf = use_ebpf;
-        if(is_use_ebpf(_use_ebpf)){
-            init_bpf_program();
-        }
+        // if(is_use_ebpf(_use_ebpf)){
+        //     init_bpf_program();
+        // }
         _fd = fd;
         sync.set_num_free_pages(_id, _num_buffer_pages);
 
@@ -338,12 +338,11 @@ class IoWorker {
         uint64_t offset = 0;
         uint32_t offset_pages = 0, index = 0;
         uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)_scratch_buf;
-        pscratch->buffer_offset = used_pages;
-        pscratch->curr_index = 0;
-        pscratch->scratch = 0;
+        magazine* pscratch = (magazine*)_scratch_buf;
+        pscratch->iter = 0;
+        pscratch->done = 0;
+        pscratch->in_use = 0;
         _buffer_len = used_pages * PAGE_SIZE;
-        pscratch->complete = used_pages * PAGE_SIZE;
 
         while (beg < end && _buffer_len < MAX_BIO_SIZE ) {
             // skip an entire word in bitmap if possible
@@ -372,16 +371,15 @@ class IoWorker {
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 _buffer_len += cur_pages * PAGE_SIZE;
 
-                pscratch->spage[index] = page_id;
-                pscratch->offset[index] = offset;
-                pscratch->length[index] = 1;
-                pscratch->max_index = index;
-                pscratch->scratch = 1;
+                pscratch->page[index] = page_id;
+                pscratch->addr[index] = offset;
+                pscratch->size[index] = 1;
+                pscratch->max = index;
+                pscratch->in_use = 1;
                 index++;
                 beg++;
             }
         }
-        pscratch->buffer_len = _buffer_len;
     }
 
     void submitTasks_dense_ebpf(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
@@ -418,8 +416,8 @@ class IoWorker {
                 //     num_pages++;
                 // }
                 // magazine 填充
-                char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
-                memset(_scratch_buf, 0, PAGE_SIZE);
+                char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, sizeof(magazine));
+                memset(_scratch_buf,0,sizeof(magazine));
                 magazine_dense(page_bitmap,beg,end,num_pages,_scratch_buf);
                 uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
@@ -460,14 +458,13 @@ class IoWorker {
                     const CountableBag<PAGEID>::iterator& end, uint32_t used_pages,char* _scratch_buf){
 
         uint64_t offset = 0, index = 0;
-        // uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
-        Scratch* pscratch = (Scratch*)_scratch_buf;
-        pscratch->buffer_offset = used_pages;
-        pscratch->curr_index = 0;
-        pscratch->max_index = 0;
-        pscratch->scratch = 0;
+        magazine* pscratch = (magazine*)_scratch_buf;
+        pscratch->iter = 0;
+        pscratch->max = 0;
+        pscratch->done = 0;
+        pscratch->in_use = 0;
         _buffer_len = used_pages * PAGE_SIZE;
-        pscratch->complete = used_pages * PAGE_SIZE;
+  
         PAGEID page_id;
 
         while (beg != end && _buffer_len < MAX_BIO_SIZE) {
@@ -482,17 +479,16 @@ class IoWorker {
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 _buffer_len += PAGE_SIZE;
 
-                pscratch->spage[index] = (uint64_t)page_id;
-                pscratch->offset[index] = offset;
-                pscratch->length[index] = 1;
-                pscratch->max_index = index;
-                pscratch->scratch = 1;
+                pscratch->page[index] = (uint64_t)page_id;
+                pscratch->addr[index] = offset;
+                pscratch->size[index] = 1;
+                pscratch->max = index;
+                pscratch->in_use = 1;
                 index++;
                 page_bitmap->set_bit(page_id);
                 // printf("----xrp pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             }
         }
-        pscratch->buffer_len = _buffer_len;
     }
 
     void submitTasks_sparse_ebpf(CountableBag<PAGEID>::iterator& beg,
@@ -518,8 +514,8 @@ class IoWorker {
             beg++;
 
             //scratch，无论scratch是否包含数据，都下发一个scratch。
-            char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
-            memset(_scratch_buf, 0, PAGE_SIZE);
+            char* _scratch_buf = (char*)aligned_alloc(PAGE_SIZE, sizeof(magazine));
+            memset(_scratch_buf,0,sizeof(magazine));
             magazine_sparse(page_bitmap,beg,end,1,_scratch_buf);
             uint64_t magazine_pages = _buffer_len / PAGE_SIZE;
 
@@ -536,7 +532,7 @@ class IoWorker {
             _scratch_bufs_tmp[index] = _scratch_buf;
             index++;
             // debug info
-            // dump_page((unsigned char *)(&_scratch_buf[index]), 4096);
+            // dump_page((unsigned char *)(_scratch_buf), sizeof(magazine));
             // printf("----io submit: ptr is %p----\n", _scratch_buf);
            
         }

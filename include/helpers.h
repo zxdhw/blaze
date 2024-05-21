@@ -20,6 +20,8 @@
 
 namespace blaze {
 
+typedef struct magazine_xrp magazine;
+
 static int load_bpf_program(const char *path) {
     struct bpf_object *obj;
     int ret, progfd;

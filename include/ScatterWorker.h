@@ -8,7 +8,7 @@
 #include "Queue.h"
 #include "Param.h"
 #include "Bin.h"
-#include "ebpf_types.h"
+#include "helpers.h"
 
 namespace blaze {
 
@@ -138,17 +138,18 @@ class ScatterWorker {
         }
         // 处理scratch
         if(item.scratch){
-            Scratch* pscratch = (Scratch*) item._scratch_buf;
-            // pscratch->curr_index已经在magazine中迭代到max_index+1
-            // printf("----scratch resubmission times: %llu-----\n",pscratch->curr_index);
+            magazine* pscratch = (magazine*) item._scratch_buf;
+            // dump_page((unsigned char *)(pscratch), sizeof(magazine));
+            // pscratch->curr_index已经在magazine中迭代到max+1
+            // printf("----scratch resubmission times: %d-----\n",pscratch->iter);
             uint64_t index = 0;
-            while( pscratch->scratch && index <= pscratch->max_index){
+            while( pscratch->in_use && index <= pscratch->max){
 
-                ppid_start = pscratch->spage[index];
-                const PAGEID ppid_end_ebpf   = ppid_start + pscratch->length[index];
+                ppid_start = pscratch->page[index];
+                const PAGEID ppid_end_magazine  = ppid_start + pscratch->size[index];
                 
                 // printf("----scratch pid is %u -------\n",ppid_start);
-                while (ppid_start < ppid_end_ebpf) {
+                while (ppid_start < ppid_end_magazine) {
                     const PAGEID pid = ppid_start * _num_disks + item.disk_id;
                     processFetchedPage(graph, func, pid, buffer);
                     ppid_start++;
@@ -158,9 +159,10 @@ class ScatterWorker {
             }
         }
         if(item.scratch){
-            Scratch* pscratch = (Scratch*) item._scratch_buf;
-            sync.add_num_free_pages(item.disk_id, (pscratch->buffer_len / PAGE_SIZE));
-            _num_processed_pages += (pscratch->buffer_len / PAGE_SIZE);
+            magazine* pscratch = (magazine*) item._scratch_buf;
+            // max io number is 32, scratch is 31,max = 30;
+            sync.add_num_free_pages(item.disk_id, (pscratch->max + 2));
+            _num_processed_pages += (pscratch->max + 1);
             free(item._scratch_buf);
         } else {
             sync.add_num_free_pages(item.disk_id, item.num);
