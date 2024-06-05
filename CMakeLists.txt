@@ -11,7 +11,7 @@ endif()
 
 #GLOBALS
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-march=native)
+add_compile_options(-march=native )
 #set(OPTS -march=native -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -fpermissive -O3)
 file(GLOB HEADERS "include/*.h")
 

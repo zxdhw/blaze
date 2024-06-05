@@ -47,7 +47,7 @@ static __inline void set_next_block(Scratch *mg, struct bpf_xrp *context){
 SEC("haslab_bfs")
 unsigned int haslab_bfs_func(struct bpf_xrp *context) {
     //page信息转换
-    dbg_print("bfs-bpf: entered\n");
+    // dbg_print("bfs-bpf: entered\n");
     Scratch *magazine = (Scratch *) context->scratch;
     
     set_next_block(magazine,context);

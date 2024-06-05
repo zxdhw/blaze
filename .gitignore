@@ -2,6 +2,7 @@
 *.json
 # 忽略 build 文件夹
 build/
+.cache/
 
 # 忽略 analysis 文件夹中的所有文件
 !analysis
@@ -12,3 +13,8 @@ analysis/**/*.out
 analysis/**/*.log
 analysis/**/*.png
 analysis/**/*.old
+analysis/**/*.svg
+analysis/**/*.pl
+analysis/**/*.folded
+analysis/**/*.csv
+analysis/**/*.script

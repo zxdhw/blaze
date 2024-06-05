@@ -15,8 +15,8 @@ typedef unsigned long long offset_m; //以page为单位
 
 #define PAGE_SIZE 4096
 #define SCRATCH_SIZE 4096   // 4KB
-#define IO_INFO  128        // 最大可以寄生的IO数量
-#define MAX_BIO_SIZE 128 * 1024       // 单次IO（包括寄生）的最大大小 128KB 
+#define IO_INFO  128       // 最大可以寄生的IO数量(128 *4 = 512KB)
+#define MAX_BIO_SIZE 128 * 1024       // 单次IO（包括寄生）的最大大小 128KB ,超过以后可能会报错
 #define IO_MAX_PAGES_PER_MG 32
 #define PTR_SIZE sizeof(ptr__m)
 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Type.h"
+#include "ebpf_types.h"
 #include "galois/Bag.h"
 #include "Synchronization.h"
 #include "Queue.h"
@@ -146,7 +147,7 @@ class ScatterWorker {
             while( pscratch->in_use && index <= pscratch->max){
 
                 ppid_start = pscratch->page[index];
-                const PAGEID ppid_end_magazine  = ppid_start + pscratch->size[index];
+                const PAGEID ppid_end_magazine  = ppid_start + (pscratch->size[index] / PAGE_SIZE);
                 
                 // printf("----scratch pid is %u -------\n",ppid_start);
                 while (ppid_start < ppid_end_magazine) {
