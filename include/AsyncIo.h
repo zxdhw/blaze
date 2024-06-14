@@ -9,10 +9,15 @@
 #include "Type.h"
 #include "Util.h"
 #include "Param.h"
+#include "helpers.h"
 
 namespace blaze {
 
+
+
+
 #define __NR_io_submit_xrp 447
+#define __NR_print_hit_stats 448
 
 static int io_setup(unsigned nr, aio_context_t *ctxp) {
     return syscall(__NR_io_setup, nr, ctxp);
@@ -25,6 +30,10 @@ static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
 static int io_submit_xrp(aio_context_t ctx, long nr, struct iocb **iocbpp, 
                                     unsigned int bpf_fd, char ** scratch_bufs) {
     return syscall(__NR_io_submit_xrp, ctx, nr, iocbpp, bpf_fd, scratch_bufs);
+}
+
+static int io_stat(struct hit_stats* stats_bufs) {
+    return syscall(__NR_print_hit_stats, stats_bufs);
 }
 
 static int io_getevents(aio_context_t ctx, long min_nr, long max_nr,

@@ -22,6 +22,30 @@ namespace blaze {
 
 typedef struct magazine_xrp magazine;
 
+
+struct hit_stats {
+	long aio_time;
+	long aio_count;
+
+	long fs_time;
+	long fs_count;
+
+	long block_time;
+	long block_count;
+
+	long driver_time;
+	long driver_count;
+
+	long iomap_time;
+	long iomap_count;
+
+	long get_page_time;
+	long get_page_count;
+
+	long dma_time;
+	long dma_count;
+};
+
 static int load_bpf_program(const char *path) {
     struct bpf_object *obj;
     int ret, progfd;

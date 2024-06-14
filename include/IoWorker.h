@@ -29,10 +29,12 @@ class IoWorker {
             _buffered_tasks(out),
             _queued(0), _sent(0), _received(0), _requested_all(false),
             _total_bytes_accessed(0),_total_bytes_accessed_ebpf(0), _time(0.0),
-            duration_aio(0),duration_magazine(0)
+            duration_aio(0),duration_magazine(0),
+            duration_received(0),duration_dispatch(0)
     {
         initAsyncIo();
         initMagazine();
+        _stats_bufs = (struct hit_stats*)calloc(1, sizeof(struct hit_stats));
         _num_buffer_pages = (int64_t)buffer_size / PAGE_SIZE;
     }
 
@@ -54,6 +56,7 @@ class IoWorker {
         io_destroy(_ctx);
         free(_iocb);
         free(_iocbs);
+        free(_stats_bufs);
         free(_events);
     }
 
@@ -63,14 +66,11 @@ class IoWorker {
         
     void initMagazine ()
     {
-        //临时使用，通过memcpy拷贝给传入内核的_scratch_buf
-        // _scratch_buf_tmp = (char*)calloc(1, sizeof(*_scratch));
         // 临时使用，与iocbs相同，内核拷贝完成后返回，才提交下一批请求。因此可以重复使用。
         _scratch_bufs_tmp = (char**)calloc(IO_QUEUE_DEPTH, sizeof(ptr__m));
     }
     
     void deinitMagazine() {
-        // free(_scratch_buf_tmp);
         free(_scratch_bufs_tmp);
     }
 
@@ -95,7 +95,14 @@ class IoWorker {
         } else {
             run_dense(page_bitmap, sync, io_sync);
         }
-        printf("----MAX IO SIZE is %d, MAX AIO QUEUE is %d----\n",MAX_BIO_SIZE,IO_QUEUE_DEPTH);
+        // printf("----MAX IO SIZE is %d, MAX AIO QUEUE is %d----\n",MAX_BIO_SIZE,IO_QUEUE_DEPTH);
+        duration_aio -= duration_aio;
+        duration_magazine -= duration_magazine;
+        duration_received -= duration_received;
+        duration_dispatch -= duration_dispatch;
+        // printf("----release: magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+        // printf("----release: received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+
     }
 
     uint64_t getBytesAccessed() const {
@@ -144,7 +151,13 @@ class IoWorker {
             } else {
                 submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
             }
+
+
             received = receiveTasks(done_tasks);
+            // if(_received != _queued){
+            //     printf("----received is %ld, queued is %ld----\n", _received, _queued);
+            //     // break;
+            // }
             dispatchTasks(done_tasks, received);
         }
         // printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
@@ -186,10 +199,23 @@ class IoWorker {
             } else {
                 submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
             }
+
+            _time_start = std::chrono::steady_clock::now();
+
             received = receiveTasks(done_tasks);
+
+            _time_end = std::chrono::steady_clock::now();
+            duration_received += (_time_end - _time_start);
+
+            _time_start = std::chrono::steady_clock::now();
+
             dispatchTasks(done_tasks, received);
+
+            _time_end = std::chrono::steady_clock::now();
+            duration_dispatch += (_time_end - _time_start);
         }
-        // printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+        printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+        printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
     }
 
     void submitTasks_dense_all(PAGEID& beg, const PAGEID& end,
@@ -521,7 +547,7 @@ class IoWorker {
                             Bitmap* page_bitmap,
                             Synchronization& sync, IoSync& io_sync)
     {
-        // _time_start = std::chrono::steady_clock::now();
+        _time_start = std::chrono::steady_clock::now();
         char* buf;
         uint64_t offset;
         void* data;
@@ -571,18 +597,21 @@ class IoWorker {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
 
-        //  _time_end = std::chrono::steady_clock::now();
-        //  duration_magazine += (_time_end - _time_start);
+        _time_end = std::chrono::steady_clock::now();
+        duration_magazine += (_time_end - _time_start);
         
-        // _time_start = std::chrono::steady_clock::now();
+        _time_start = std::chrono::steady_clock::now();
         // printf("----we have io %ld, submit io number %ld----\n",_queued,(_queued - _sent));
+        // io_stat(_stats_bufs);
         int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
+        // io_stat(_stats_bufs);
+        // printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
         // printf("----we submit success io number %d----\n",ret);
         if (ret > 0) {
             _sent += ret;
         }
-        // _time_end = std::chrono::steady_clock::now();
-        // duration_aio += (_time_end - _time_start);
+        _time_end = std::chrono::steady_clock::now();
+        duration_aio += (_time_end - _time_start);
         memset(_scratch_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
@@ -674,10 +703,13 @@ class IoWorker {
     uint32_t                _scratch_pages;
     uint32_t                _use_ebpf;
     size_t                  _buffer_len; // bytes
+    struct hit_stats* _stats_bufs;
     std::chrono::time_point<std::chrono::steady_clock>  _time_start;
     std::chrono::time_point<std::chrono::steady_clock>  _time_end;
     std::chrono::duration<double> duration_magazine;
     std::chrono::duration<double> duration_aio;
+    std::chrono::duration<double> duration_received;
+    std::chrono::duration<double> duration_dispatch;
 
 };
 
