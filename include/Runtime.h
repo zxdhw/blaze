@@ -22,7 +22,7 @@ class Runtime {
             _pb_engine(nullptr),
             _round(0),
             _total_accessed_io_bytes(0),
-            _total_accessed_io_bytes_ebpf(0),
+            _total_accessed_io_bytes_hit(0),
             _total_accessed_edges(0),
             _total_io_time(0.0)
     {
@@ -54,9 +54,9 @@ class Runtime {
 
     ~Runtime() {
         double io_bw_in_gbps = _total_io_time > 0 ? (double)_total_accessed_io_bytes / _total_io_time / GB : 0.0;
-        double io_bw_in_gbps_ebpf = _total_io_time > 0 ? (double)_total_accessed_io_bytes_ebpf / _total_io_time / GB : 0.0;
+        double io_bw_in_gbps_hit = _total_io_time > 0 ? (double)_total_accessed_io_bytes_hit / _total_io_time / GB : 0.0;
         printf("# IO SUMMARY    : %'lu bytes, %8.5f sec, %4.2f GB/s\n", _total_accessed_io_bytes, _total_io_time, io_bw_in_gbps);
-        printf("# IO SUMMARY EBPF   : %'lu bytes, %8.5f sec, %4.2f GB/s\n",_total_accessed_io_bytes_ebpf , _total_io_time, io_bw_in_gbps_ebpf);
+        printf("# IO SUMMARY hit   : %'lu bytes, %8.5f sec, %4.2f GB/s\n",_total_accessed_io_bytes_hit , _total_io_time, io_bw_in_gbps_hit);
         printf("# SUMMARY       : %'lu edges accessed.\n", _total_accessed_edges);
 
         if (_io_engine)
@@ -101,8 +101,8 @@ class Runtime {
         _total_accessed_io_bytes += bytes;
     }
 
-    void addAccessedIoBytes_ebpf(uint64_t bytes) {
-        _total_accessed_io_bytes_ebpf += bytes;
+    void addAccessedIoBytes_hit(uint64_t bytes) {
+        _total_accessed_io_bytes_hit += bytes;
     }
 
     void addAccessedEdges(uint64_t edges) {
@@ -165,7 +165,7 @@ class Runtime {
     // stat
     int                     _round;
     uint64_t                _total_accessed_io_bytes;
-    uint64_t                _total_accessed_io_bytes_ebpf;
+    uint64_t                _total_accessed_io_bytes_hit;
     uint64_t                _total_accessed_edges;
     double                  _total_io_time;
     MemoryCounter           _mem_counter;

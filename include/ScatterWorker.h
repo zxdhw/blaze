@@ -3,7 +3,7 @@
 
 #include <string>
 #include "Type.h"
-#include "ebpf_types.h"
+#include "hit_types.h"
 #include "galois/Bag.h"
 #include "Synchronization.h"
 #include "Queue.h"

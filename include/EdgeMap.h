@@ -29,7 +29,7 @@ class EdgeMapExecutor {
                     Worklist<VID>* frontier,
                     Func&& func,
                     FLAGS flags,
-                    FLAGS use_ebpf)
+                    FLAGS hitchhike)
         :   _runtime(Runtime::getRuntimeInstance()),
             _graph(graph),
             _out_frontier(nullptr),
@@ -39,7 +39,7 @@ class EdgeMapExecutor {
             _pb_engine(_runtime.getPBEngine()),
             _func(func),
             _flags(flags),
-            _use_ebpf(use_ebpf),
+            _hitchhike(hitchhike),
             _work_exists(true),
             _num_activated_nodes(0),
             _num_activated_edges(0),
@@ -125,13 +125,13 @@ class EdgeMapExecutor {
 
         if (use_prop_blocking(_flags)) {
             _pb_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_hitchhike);
             _compute_time = _pb_engine->stop(_graph, _func, sync);
             _out_frontier = _pb_engine->getOutFrontier();
 
         } else {
             _compute_engine->start(_graph, _func, sync);
-            _io_time = _io_engine->run(_graph, sync, io_sync,_use_ebpf);
+            _io_time = _io_engine->run(_graph, sync, io_sync,_hitchhike);
             _compute_time = _compute_engine->stop(_graph);
             _out_frontier = _compute_engine->getOutFrontier();
         }
@@ -140,9 +140,9 @@ class EdgeMapExecutor {
 
         if (_work_exists) {
             uint64_t io_bytes = _io_engine->getTotalBytesAccessed();
-            uint64_t io_bytes_ebpf = _io_engine->getTotalBytesAccessed_ebpf();
+            uint64_t io_bytes_hit = _io_engine->getTotalBytesAccessed_hit();
             _runtime.addAccessedIoBytes(io_bytes);
-            _runtime.addAccessedIoBytes_ebpf(io_bytes_ebpf);
+            _runtime.addAccessedIoBytes_hit(io_bytes_hit);
             _runtime.addAccessedEdges(_num_activated_edges);
             _runtime.addIoTime(_io_time);
         }
@@ -159,10 +159,10 @@ class EdgeMapExecutor {
     void print() {
         int round = _runtime.getRound();
         uint64_t io_bytes = 0;
-        uint64_t io_bytes_ebpf = 0;
+        uint64_t io_bytes_hit = 0;
         if (_io_engine)
             io_bytes = _io_engine->getTotalBytesAccessed();
-            io_bytes_ebpf = _io_engine->getTotalBytesAccessed_ebpf();
+            io_bytes_hit = _io_engine->getTotalBytesAccessed_hit();
 
         // frontier type
         string frontier_type_name;
@@ -174,8 +174,8 @@ class EdgeMapExecutor {
         // general info
         std::string info;
         char buf[1024];
-        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %12lu bytes(ebpf), %8.5f sec, %8.5f sec",
-                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes,io_bytes_ebpf, _compute_time, _io_time);
+        sprintf(buf, "# EDGEMAP %4d : %12lu nodes %9s, %12lu edges, %12lu bytes, %12lu bytes(hit), %8.5f sec, %8.5f sec",
+                round, _num_activated_nodes, frontier_type_name.c_str(), _num_activated_edges, io_bytes,io_bytes_hit, _compute_time, _io_time);
         info.append(buf);
 
         std::cout << info;
@@ -288,7 +288,7 @@ class EdgeMapExecutor {
     std::vector<CountableBag<PAGEID>*>     _sparse_page_frontier;  // Page frontier for sparse case
     Func&                       _func;
     FLAGS                       _flags;
-    FLAGS                       _use_ebpf;
+    FLAGS                       _hitchhike;
     bool                        _work_exists;
     uint64_t                    _num_activated_nodes;
     uint64_t                    _num_activated_edges;
@@ -298,8 +298,8 @@ class EdgeMapExecutor {
 };
 
 template <typename G, typename F>
-Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS use_ebpf = 0) {
-    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags, use_ebpf);
+Worklist<VID>* edgeMap(G& graph, Worklist<VID>* frontier, F&& func, FLAGS flags = 0, FLAGS hitchhike = 0) {
+    EdgeMapExecutor<G, F> executor(graph, frontier, std::forward<F>(func), flags, hitchhike);
     executor.run();
     return executor.newFrontier();
 }

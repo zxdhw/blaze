@@ -6,7 +6,7 @@
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 #include <stdbool.h>
-#include "ebpf_types.h"
+#include "hit_types.h"
 
 char LICENSE[] SEC("license") = "GPL";
 // #define PAGE_SIZE 4096

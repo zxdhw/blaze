@@ -19,8 +19,12 @@ RESULT='/home/zxd/blaze/analysis/graph/dapuH'
 COMPUTEWORKERS=10
 STARTNODE=50395005
 # 101
-EBPF=1
+HIT=1
 TIMES=1
+
+declare -a hitSize=("4" "8" "16" "32" "64" "128" )
+
+
 declare -a apps=("bfs")
 #data and index
 declare -a index=("sk2005.gr.index")
@@ -34,19 +38,21 @@ declare -a data=("sk2005.gr.adj.0")
 #         for ((i=0; i<${#index[@]}; i++)); do
 #             k="${index[i]}"
 #             j="${data[i]}"
-#             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
+#             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $HIT $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
 #             # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE $INDEX/${k} $DATA/${j} >> nromal.out
 #         done
 #     done
 # done
 
 for ((n=0; n<TIMES; n++)); do
-    for e in "${apps[@]}"; do
-        for ((i=0; i<${#index[@]}; i++)); do
-            k="${index[i]}"
-            j="${data[i]}"
-            # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
-            sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $EBPF $INDEX/${k} $DATA/${j} > bfs_hit.out
+    for h in "${hitSize[@]}"; do
+        for e in "${apps[@]}"; do
+            for ((i=0; i<${#index[@]}; i++)); do
+                k="${index[i]}"
+                j="${data[i]}"
+                # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $HIT $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
+                sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -hit $HIT -hitSize ${h} $INDEX/${k} $DATA/${j} > bfs_hit_H${h}K_D1.out
+            done
         done
     done
 done

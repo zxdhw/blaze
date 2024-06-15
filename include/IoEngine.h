@@ -51,7 +51,7 @@ class IoEngine {
     }
 
     template <typename Gr>
-    double run(Gr& graph, Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
+    double run(Gr& graph, Synchronization& sync, IoSync& io_sync, FLAGS& hitchhike) {
         auto time_start = std::chrono::steady_clock::now();
 
         bool dense_all = (_frontier == nullptr);
@@ -67,7 +67,7 @@ class IoEngine {
                                         _sparse_page_frontier->size() ? (*_sparse_page_frontier)[i] : nullptr,
                                         std::ref(sync),
                                         std::ref(io_sync),
-                                        std::ref(use_ebpf));
+                                        std::ref(hitchhike));
             _thread_pool.fork(getWorkerTID(i), f);
         }
 
@@ -93,10 +93,10 @@ class IoEngine {
         return sum;
     }
 
-    uint64_t getTotalBytesAccessed_ebpf() const {
+    uint64_t getTotalBytesAccessed_hit() const {
         uint64_t sum = 0;
         for (int i = 0; i < _num_workers; ++i) {
-            sum += _workers[i]->getBytesAccessed_ebpf();
+            sum += _workers[i]->getBytesAccessed_hit();
         }
         return sum;
     }

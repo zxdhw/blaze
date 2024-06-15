@@ -1,5 +1,5 @@
-#ifndef EBPF_HELPERS_H
-#define EBPF_HELPERS_H
+#ifndef hit_HELPERS_H
+#define hit_HELPERS_H
 
 #include <errno.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@
 #include <linux/input.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
-#include "ebpf_types.h"
+#include "hit_types.h"
 
 
 namespace blaze {
@@ -89,4 +89,4 @@ static void dump_page(uint8_t *page_image, uint64_t size) {
 
 }// namespace blaze
 
-#endif //EBPF_HELPERS_H
+#endif //hit_HELPERS_H

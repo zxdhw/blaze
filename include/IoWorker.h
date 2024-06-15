@@ -3,7 +3,7 @@
 
 #include "Type.h"
 #include "Graph.h"
-#include "ebpf_types.h"
+#include "hit_types.h"
 #include "galois/Bag.h"
 #include "Param.h"
 #include "IoSync.h"
@@ -28,9 +28,10 @@ class IoWorker {
         :   _id(id),
             _buffered_tasks(out),
             _queued(0), _sent(0), _received(0), _requested_all(false),
-            _total_bytes_accessed(0),_total_bytes_accessed_ebpf(0), _time(0.0),
+            _total_bytes_accessed(0),_total_bytes_accessed_hit(0), _time(0.0),
             duration_aio(0),duration_magazine(0),
-            duration_received(0),duration_dispatch(0)
+            duration_received(0),duration_dispatch(0),
+            _time_stat(0), _kernel_stat(1)
     {
         initAsyncIo();
         initMagazine();
@@ -76,13 +77,17 @@ class IoWorker {
 
 
     void run(int fd, bool dense_all, Bitmap* page_bitmap, CountableBag<PAGEID>* sparse_page_frontier,
-            Synchronization& sync, IoSync& io_sync, FLAGS& use_ebpf) {
+            Synchronization& sync, IoSync& io_sync, FLAGS& hitchhike) {
 
-        _use_ebpf = use_ebpf;
-        // if(is_use_ebpf(_use_ebpf)){
+        _hitchhike = hitchhike;
+        // if(is_hitchhike(_hitchhike)){
         //     init_bpf_program();
         // }
         _fd = fd;
+        if(_kernel_stat){
+            io_stat(_stats_bufs);
+        }
+
         sync.set_num_free_pages(_id, _num_buffer_pages);
 
         if (dense_all) {
@@ -96,12 +101,19 @@ class IoWorker {
             run_dense(page_bitmap, sync, io_sync);
         }
         // printf("----MAX IO SIZE is %d, MAX AIO QUEUE is %d----\n",MAX_BIO_SIZE,IO_QUEUE_DEPTH);
-        duration_aio -= duration_aio;
-        duration_magazine -= duration_magazine;
-        duration_received -= duration_received;
-        duration_dispatch -= duration_dispatch;
-        // printf("----release: magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
-        // printf("----release: received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+        if(_time_stat){
+            duration_aio -= duration_aio;
+            duration_magazine -= duration_magazine;
+            duration_received -= duration_received;
+            duration_dispatch -= duration_dispatch;
+            // printf("----release: magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+            // printf("----release: received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+        }
+
+        if(_kernel_stat){
+            io_stat(_stats_bufs);
+            printf("----get page time is %ld, get page count is %ld----\n",_stats_bufs->get_page_time, _stats_bufs->get_page_count);
+        }
 
     }
 
@@ -109,8 +121,8 @@ class IoWorker {
         return _total_bytes_accessed;
     }
 
-    uint64_t getBytesAccessed_ebpf() const {
-        return _total_bytes_accessed_ebpf;
+    uint64_t getBytesAccessed_hit() const {
+        return _total_bytes_accessed_hit;
     }
 
     void initState() {
@@ -119,7 +131,7 @@ class IoWorker {
         _received = 0;
         _requested_all = false;
         _total_bytes_accessed = 0;
-        _total_bytes_accessed_ebpf = 0;
+        _total_bytes_accessed_hit = 0;
         _time = 0;
     }
 
@@ -146,12 +158,11 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            if(is_use_ebpf(_use_ebpf)){
-                submitTasks_dense_ebpf(page_bitmap, beg, end, sync, io_sync);
+            if(is_hitchhike(_hitchhike)){
+                submitTasks_dense_hit(page_bitmap, beg, end, sync, io_sync);
             } else {
                 submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
             }
-
 
             received = receiveTasks(done_tasks);
             // if(_received != _queued){
@@ -160,7 +171,10 @@ class IoWorker {
             // }
             dispatchTasks(done_tasks, received);
         }
-        // printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+        if(_time_stat){
+            printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+        }
+        
     }
 
     void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, 
@@ -194,8 +208,8 @@ class IoWorker {
         // }
 
         while (!_requested_all || _received < _queued) {
-            if(is_use_ebpf(_use_ebpf)){
-                submitTasks_sparse_ebpf(beg, end, page_bitmap, sync, io_sync);
+            if(is_hitchhike(_hitchhike)){
+                submitTasks_sparse_hit(beg, end, page_bitmap, sync, io_sync);
             } else {
                 submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
             }
@@ -214,8 +228,10 @@ class IoWorker {
             _time_end = std::chrono::steady_clock::now();
             duration_dispatch += (_time_end - _time_start);
         }
-        printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
-        printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+        if(_time_stat) {
+            printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
+            printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+        }
     }
 
     void submitTasks_dense_all(PAGEID& beg, const PAGEID& end,
@@ -262,7 +278,9 @@ class IoWorker {
     void submitTasks_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
                         Synchronization& sync, IoSync& io_sync)
     {
-        _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         off_t offset;
         void* data;
@@ -289,6 +307,12 @@ class IoWorker {
                 {
                     num_pages++;
                 }
+                // beg++;
+                // while (beg < end && num_pages < IO_MAX_PAGES_PER_REQ)
+                // {
+                //     beg++;
+                //     num_pages++;  
+                // }
 
                 // wait until free pages are available
                 while (sync.get_num_free_pages(_id) < num_pages) {}
@@ -311,15 +335,21 @@ class IoWorker {
         for (size_t i = 0; i < _queued - _sent; i++) {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
-        _time_end = std::chrono::steady_clock::now();
-        duration_magazine += (_time_end - _time_start);
-        _time_start = std::chrono::steady_clock::now();
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_magazine += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
         int ret = io_submit(_ctx, _queued - _sent, _iocbs);
         if (ret > 0) {
             _sent += ret;
         }
-        _time_end = std::chrono::steady_clock::now();
-        duration_aio += (_time_end - _time_start);
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_aio += (_time_end - _time_start);
+        }
     }
 
     void submitTasks_sparse(CountableBag<PAGEID>::iterator& beg,
@@ -327,7 +357,9 @@ class IoWorker {
                             Bitmap* page_bitmap,
                             Synchronization& sync, IoSync& io_sync)
     {
-        _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         off_t offset;
         void* data;
@@ -364,16 +396,20 @@ class IoWorker {
         for (size_t i = 0; i < _queued - _sent; i++) {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
-        _time_end = std::chrono::steady_clock::now();
-        duration_magazine += (_time_end - _time_start);
-
-        _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_magazine += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
         int ret = io_submit(_ctx, _queued - _sent, _iocbs);
         if (ret > 0) {
             _sent += ret;
         }
-        _time_end = std::chrono::steady_clock::now();
-        duration_aio += (_time_end - _time_start);
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_aio += (_time_end - _time_start);
+        }
     }
         //zhengxd: 向magazine中填充IO
     void magazine_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint32_t used_pages,char* _scratch_buf){
@@ -427,10 +463,12 @@ class IoWorker {
         }
     }
 
-    void submitTasks_dense_ebpf(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
+    void submitTasks_dense_hit(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
                         Synchronization& sync, IoSync& io_sync)
     {
-        // _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         uint64_t offset;
         void* data;
@@ -491,16 +529,22 @@ class IoWorker {
         for (size_t i = 0; i < _queued - _sent; i++) {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
-        // _time_end = std::chrono::steady_clock::now();
-        //  duration_magazine += (_time_end - _time_start);
 
-        // _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_magazine += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
+
         int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
         if (ret > 0) {
             _sent += ret;
         }
-        // _time_end = std::chrono::steady_clock::now();
-        // duration_aio += (_time_end - _time_start);
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_aio += (_time_end - _time_start);
+        }
         memset(_scratch_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
@@ -542,12 +586,14 @@ class IoWorker {
         }
     }
 
-    void submitTasks_sparse_ebpf(CountableBag<PAGEID>::iterator& beg,
+    void submitTasks_sparse_hit(CountableBag<PAGEID>::iterator& beg,
                             const CountableBag<PAGEID>::iterator& end,
                             Bitmap* page_bitmap,
                             Synchronization& sync, IoSync& io_sync)
     {
-        _time_start = std::chrono::steady_clock::now();
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         uint64_t offset;
         void* data;
@@ -596,22 +642,27 @@ class IoWorker {
         for (size_t i = 0; i < _queued - _sent; i++) {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
-
-        _time_end = std::chrono::steady_clock::now();
-        duration_magazine += (_time_end - _time_start);
-        
-        _time_start = std::chrono::steady_clock::now();
-        // printf("----we have io %ld, submit io number %ld----\n",_queued,(_queued - _sent));
-        // io_stat(_stats_bufs);
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_magazine += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
+        // if(_kernel_stat){
+        //     io_stat(_stats_bufs);
+        // }
         int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
-        // io_stat(_stats_bufs);
-        // printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
+        // if(_kernel_stat){
+        //     io_stat(_stats_bufs);
+        //     printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
+        // }
         // printf("----we submit success io number %d----\n",ret);
         if (ret > 0) {
             _sent += ret;
         }
-        _time_end = std::chrono::steady_clock::now();
-        duration_aio += (_time_end - _time_start);
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_aio += (_time_end - _time_start);
+        }
         memset(_scratch_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
@@ -645,7 +696,7 @@ class IoWorker {
         _queued++;
 
         _total_bytes_accessed += data_len;
-        _total_bytes_accessed_ebpf += _buffer_len;
+        _total_bytes_accessed_hit += _buffer_len;
         _buffer_len = 0;
     }    
 
@@ -688,7 +739,7 @@ class IoWorker {
     int64_t                 _num_buffer_pages;
     // For statistics
     uint64_t                _total_bytes_accessed;
-    uint64_t                _total_bytes_accessed_ebpf;
+    uint64_t                _total_bytes_accessed_hit;
     double                  _time;
 
     aio_context_t                       _ctx;
@@ -696,13 +747,17 @@ class IoWorker {
     struct iocb**                       _iocbs;
     struct io_event*                    _events;
 
-    // ebpf 
+    // hit 
     int                     _bpf_fd;
     char*                   _scratch_buf_tmp;
     char**                  _scratch_bufs_tmp;
     uint32_t                _scratch_pages;
-    uint32_t                _use_ebpf;
+    uint32_t                _hitchhike;
     size_t                  _buffer_len; // bytes
+
+    bool _time_stat;
+    bool _kernel_stat;
+
     struct hit_stats* _stats_bufs;
     std::chrono::time_point<std::chrono::steady_clock>  _time_start;
     std::chrono::time_point<std::chrono::steady_clock>  _time_end;

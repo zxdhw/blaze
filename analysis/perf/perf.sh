@@ -10,7 +10,7 @@ VMLINUX='/home/zxd/linux-build/linux/vmlinux'
 
 THREAD=10
 CORE=$((THREAD + 1))
-EBPF=1
+HIT=0
 STARTNODE=50395005
 declare -a apps=('bfs')
 
@@ -18,17 +18,17 @@ declare -a apps=('bfs')
 for e in "${apps[@]}"
 do
 LOG_LEVEL="debug";
-# sudo $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $EBPF $INDEX $DATA;
+# sudo $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;
-sudo perf record --all-cpus -e instructions -F 99 -o $PERF_RES/${EBPF}_${e}.out $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $EBPF $INDEX $DATA;
+sudo perf record --all-cpus -e instructions -F 99 -o $PERF_RES/${HIT}_${e}.out $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;
 done
 
 # parse
 for e in "${apps[@]}"
 do
-sudo perf report --cpu $CORE -n --stdio -s symbol -i $PERF_RES/${EBPF}_${e}.out  > $PERF_PARSED_LIST/${EBPF}_${THREAD}_${e}_hitchhike.txt;
-# sudo perf report --cpu 11 --call-graph=graph,0,caller,function,count --show-cpu-utilization -n --stdio -s symbol -i $PERF_RES/${EBPF}_${e}.out  > $PERF_PARSED_LIST/${EBPF}_${THREAD}_${e}_graph.txt;
+sudo perf report --cpu $CORE -n --stdio -s symbol -i $PERF_RES/${HIT}_${e}.out  > $PERF_PARSED_LIST/${HIT}_${THREAD}_${e}_libaio_D128.txt;
+# sudo perf report --cpu 11 --call-graph=graph,0,caller,function,count --show-cpu-utilization -n --stdio -s symbol -i $PERF_RES/${HIT}_${e}.out  > $PERF_PARSED_LIST/${HIT}_${THREAD}_${e}_graph.txt;
 # --call-graph=graph,0,caller,function,count
 # --vmlinux 
 # --show-cpu-utilization

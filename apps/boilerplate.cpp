@@ -16,9 +16,17 @@ cll::opt<unsigned int>
                     cll::desc("IO buffer space size in MB (default: 1024)"),
                     cll::init(256));
 cll::opt<unsigned int>
-    use_ebpf("ebpf",
-                    cll::desc("use ebpf ibaio syscall) (default: 0)"),
+    hitchhike("hit",
+                    cll::desc("use hitchhike ibaio syscall) (default: 0)"),
                     cll::init(0));
+// cll::opt<unsigned int>
+//     ioQueueDepth("queueDepth",
+//                     cll::desc("AIO Queue Depth (default: 128)"),
+//                     cll::init(128));
+cll::opt<unsigned int>
+    hitSize("hitSize",
+                    cll::desc("Hitchhike size in KB (default: 128)"),
+                    cll::init(128));
 
 cll::opt<std::string>
     outIndexFilename(cll::Positional, cll::desc("<out index file>"), cll::Required);
