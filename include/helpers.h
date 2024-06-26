@@ -20,12 +20,19 @@
 
 namespace blaze {
 
-typedef struct magazine_xrp magazine;
+typedef struct hitchhike magazine;
 
 
 struct hit_stats {
+
 	long aio_time;
 	long aio_count;
+
+	long aio_hit_time;
+	long aio_hit_count;
+    
+	long read_iter_time;
+	long read_iter_count;
 
 	long fs_time;
 	long fs_count;
@@ -42,8 +49,29 @@ struct hit_stats {
 	long get_page_time;
 	long get_page_count;
 
-	long dma_time;
+    long bio_time;
+	long bio_count;
+
+	long req_time;
+	long req_count;
+
+    long dma_time;
 	long dma_count;
+
+    long sq_time;
+	long sq_count;
+
+    long sq_cpy_time;
+	long sq_cpy_count;
+
+    long sq_write_time;
+	long sq_write_count;
+
+    long lock_time;
+	long lock_count;
+
+	long interrupt_time;
+	long interrupt_count;
 };
 
 static int load_bpf_program(const char *path) {

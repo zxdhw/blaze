@@ -31,7 +31,7 @@ class IoWorker {
             _total_bytes_accessed(0),_total_bytes_accessed_hit(0), _time(0.0),
             duration_aio(0),duration_magazine(0),
             duration_received(0),duration_dispatch(0),
-            _time_stat(0), _kernel_stat(1)
+            _time_stat(0), _kernel_stat(0)
     {
         initAsyncIo();
         initMagazine();
@@ -112,9 +112,22 @@ class IoWorker {
 
         if(_kernel_stat){
             io_stat(_stats_bufs);
+            printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
+            printf("----aio hit time is %ld, aio hit count is %ld----\n",_stats_bufs->aio_hit_time, _stats_bufs->aio_hit_count);
+            printf("----read iter time is %ld, read iter count is %ld----\n",_stats_bufs->read_iter_time, _stats_bufs->read_iter_count);
+            printf("----fs time is %ld, fs count is %ld----\n",_stats_bufs->fs_time, _stats_bufs->fs_count);
+            printf("----block time is %ld, block count is %ld----\n",_stats_bufs->block_time, _stats_bufs->block_count);
+            printf("----driver time is %ld, dirver count is %ld----\n",_stats_bufs->driver_time, _stats_bufs->driver_count);
+            printf("----iomap time is %ld, iomap count is %ld----\n",_stats_bufs->iomap_time, _stats_bufs->iomap_count);
             printf("----get page time is %ld, get page count is %ld----\n",_stats_bufs->get_page_time, _stats_bufs->get_page_count);
+            printf("----bio time is %ld, bio count is %ld----\n",_stats_bufs->bio_time, _stats_bufs->bio_count);
+            printf("----req time is %ld, req count is %ld----\n",_stats_bufs->req_time, _stats_bufs->req_count);
+            printf("----dma time is %ld, dma count is %ld----\n",_stats_bufs->dma_time, _stats_bufs->dma_count);
+            printf("----sq time is %ld, sq count is %ld----\n",_stats_bufs->sq_time, _stats_bufs->sq_count);
+            printf("----sq cpy time is %ld, sq cpy count is %ld----\n",_stats_bufs->sq_cpy_time, _stats_bufs->sq_cpy_count);
+            printf("----sq write time is %ld, sq write count is %ld----\n",_stats_bufs->sq_write_time, _stats_bufs->sq_write_count);
+            printf("----lock time is %ld, lock count is %ld----\n",_stats_bufs->lock_time, _stats_bufs->lock_count);
         }
-
     }
 
     uint64_t getBytesAccessed() const {
@@ -213,20 +226,21 @@ class IoWorker {
             } else {
                 submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
             }
-
-            _time_start = std::chrono::steady_clock::now();
-
+            if(_time_stat) {
+                _time_start = std::chrono::steady_clock::now();
+            }
             received = receiveTasks(done_tasks);
 
-            _time_end = std::chrono::steady_clock::now();
-            duration_received += (_time_end - _time_start);
-
-            _time_start = std::chrono::steady_clock::now();
-
+            if(_time_stat) {
+                _time_end = std::chrono::steady_clock::now();
+                duration_received += (_time_end - _time_start);
+                _time_start = std::chrono::steady_clock::now();
+            }
             dispatchTasks(done_tasks, received);
-
-            _time_end = std::chrono::steady_clock::now();
-            duration_dispatch += (_time_end - _time_start);
+            if(_time_stat) {
+                _time_end = std::chrono::steady_clock::now();
+                duration_dispatch += (_time_end - _time_start);
+            }
         }
         if(_time_stat) {
             printf("----magazine time is %lf, aio time is %lf----\n",duration_magazine.count(),duration_aio.count());
@@ -244,7 +258,7 @@ class IoWorker {
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             // check continuous pages up to 16kB
             PAGEID page_id = beg;
-            uint32_t num_pages = IO_MAX_PAGES_PER_REQ;
+            uint64_t num_pages = IO_MAX_PAGES_PER_REQ;
             if (beg + num_pages > end)
                 num_pages = end - beg;
 
@@ -252,7 +266,7 @@ class IoWorker {
             while (sync.get_num_free_pages(_id) < num_pages) {}
             sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
 
-            uint32_t len = num_pages * PAGE_SIZE;
+            uint64_t len = num_pages * PAGE_SIZE;
             buf = (char*)aligned_alloc(PAGE_SIZE, len);
             offset = (uint64_t)page_id * PAGE_SIZE;
             IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
@@ -300,7 +314,7 @@ class IoWorker {
             } else {
                 // check continuous pages up to 16kB
                 PAGEID page_id = beg;
-                uint32_t num_pages = 1;
+                uint64_t num_pages = 1;
                 while (page_bitmap->get_bit(++beg)
                              && beg < end 
                              && num_pages < IO_MAX_PAGES_PER_REQ)
@@ -318,13 +332,13 @@ class IoWorker {
                 while (sync.get_num_free_pages(_id) < num_pages) {}
                 sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
                 
-                uint32_t len = num_pages * PAGE_SIZE;
+                uint64_t len = num_pages * PAGE_SIZE;
                 buf = (char*)aligned_alloc(PAGE_SIZE, len);
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
                 enqueueRequest(buf, len, offset, item);
                 // zhengxd: 打印page 连续性
-                // printf(" %d \n",num_pages);
+                // printf(" %ld \n",num_pages);
             }
         }
 
@@ -412,13 +426,13 @@ class IoWorker {
         }
     }
         //zhengxd: 向magazine中填充IO
-    void magazine_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint32_t used_pages,char* _scratch_buf){
+    void magazine_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint64_t used_pages,char* _scratch_buf){
 
         PAGEID page_id;
-        uint32_t cur_pages;
+        uint64_t cur_pages;
         uint64_t offset = 0;
-        uint32_t offset_pages = 0, index = 0;
-        uint32_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
+        uint64_t offset_pages = 0, index = 0;
+        uint64_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
         magazine* pscratch = (magazine*)_scratch_buf;
         // pscratch->iter = 0;
         // pscratch->done = 0;
@@ -474,7 +488,7 @@ class IoWorker {
         void* data;
         PAGEID page_id;
         uint64_t index = 0;
-        uint32_t num_pages;
+        uint64_t num_pages;
 
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             // skip an entire word in bitmap if possible
@@ -536,7 +550,7 @@ class IoWorker {
             _time_start = std::chrono::steady_clock::now();
         }
 
-        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
+        int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
         if (ret > 0) {
             _sent += ret;
         }
@@ -550,7 +564,7 @@ class IoWorker {
 
     //zhengxd: 向magazine中填充IO
     void magazine_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,
-                    const CountableBag<PAGEID>::iterator& end, uint32_t used_pages,char* _scratch_buf){
+                    const CountableBag<PAGEID>::iterator& end, uint64_t used_pages,char* _scratch_buf){
 
         uint64_t offset = 0, index = 0;
         magazine* pscratch = (magazine*)_scratch_buf;
@@ -598,7 +612,7 @@ class IoWorker {
         uint64_t offset;
         void* data;
         PAGEID page_id;
-        uint32_t index = 0;
+        uint64_t index = 0;
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             page_id = *beg;
@@ -650,7 +664,7 @@ class IoWorker {
         // if(_kernel_stat){
         //     io_stat(_stats_bufs);
         // }
-        int ret = io_submit_xrp(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
+        int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _bpf_fd, _scratch_bufs_tmp);
         // if(_kernel_stat){
         //     io_stat(_stats_bufs);
         //     printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
@@ -667,7 +681,7 @@ class IoWorker {
     }
 
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {
-        uint32_t idx = _queued % IO_QUEUE_DEPTH;
+        uint64_t idx = _queued % IO_QUEUE_DEPTH;
         struct iocb* pIocb = &_iocb[idx];
         memset(pIocb, 0, sizeof(*pIocb));
         pIocb->aio_fildes = _fd;
@@ -683,7 +697,7 @@ class IoWorker {
 
 
     void enqueueRequest_xrp(char* buf, size_t data_len, size_t _buffer_len, off_t offset, void* data) {
-        uint32_t idx = _queued % IO_QUEUE_DEPTH;
+        uint64_t idx = _queued % IO_QUEUE_DEPTH;
         struct iocb* pIocb = &_iocb[idx];
         memset(pIocb, 0, sizeof(*pIocb));
         pIocb->aio_fildes = _fd;
@@ -751,8 +765,8 @@ class IoWorker {
     int                     _bpf_fd;
     char*                   _scratch_buf_tmp;
     char**                  _scratch_bufs_tmp;
-    uint32_t                _scratch_pages;
-    uint32_t                _hitchhike;
+    uint64_t                _scratch_pages;
+    uint64_t                _hitchhike;
     size_t                  _buffer_len; // bytes
 
     bool _time_stat;
