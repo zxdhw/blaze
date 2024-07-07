@@ -19,15 +19,15 @@ cll::opt<unsigned int>
     hitchhike("hit",
                     cll::desc("use hitchhike ibaio syscall) (default: 0)"),
                     cll::init(0));
-// cll::opt<unsigned int>
-//     ioQueueDepth("queueDepth",
-//                     cll::desc("AIO Queue Depth (default: 128)"),
-//                     cll::init(128));
+cll::opt<unsigned int>
+    queueDepth("queueDepth",
+                    cll::desc("AIO Queue Depth (default: 128)"),
+                    cll::init(128));
 cll::opt<unsigned int>
     hitSize("hitSize",
                     cll::desc("Hitchhike size in KB (default: 128)"),
                     cll::init(128));
-
+                
 cll::opt<std::string>
     outIndexFilename(cll::Positional, cll::desc("<out index file>"), cll::Required);
 

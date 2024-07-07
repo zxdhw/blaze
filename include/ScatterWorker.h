@@ -1,6 +1,8 @@
 #ifndef BLAZE_BINNING_WORKER_H
 #define BLAZE_BINNING_WORKER_H
 
+#include <cstdint>
+#include <linux/aio_abi.h>
 #include <string>
 #include "Type.h"
 #include "hit_types.h"
@@ -137,20 +139,20 @@ class ScatterWorker {
             ppid_start++;
             buffer += PAGE_SIZE;
         }
-        // 处理scratch
-        if(item.scratch){
-            magazine* pscratch = (magazine*) item._scratch_buf;
-            // dump_page((unsigned char *)(pscratch), sizeof(magazine));
-            // pscratch->curr_index已经在magazine中迭代到max+1
-            // printf("----scratch resubmission times: %d-----\n",pscratch->iter);
+        // 处理hit
+        if(item.hit){
+            struct hitchhike* hit = (struct hitchhike*) item._hit_buf;
+            uint64_t* pages_id = (uint64_t*) item.pages_id;
             uint64_t index = 0;
-            while( pscratch->in_use && index <= pscratch->max){
+            while( hit->in_use && index <= hit->max){
 
-                ppid_start = pscratch->page[index];
-                const PAGEID ppid_end_magazine  = ppid_start + (pscratch->size[index] / PAGE_SIZE);
+                ppid_start = pages_id[index];
+                //zhengxd: size always == 4096( 1 page)
+                const PAGEID ppid_end_hit  = ppid_start + 1;
+                // const PAGEID ppid_end_hit  = ppid_start + (hit->size[index] / PAGE_SIZE);
                 
-                // printf("----scratch pid is %u -------\n",ppid_start);
-                while (ppid_start < ppid_end_magazine) {
+                // printf("----hit pid is %u -------\n",ppid_start);
+                while (ppid_start < ppid_end_hit) {
                     const PAGEID pid = ppid_start * _num_disks + item.disk_id;
                     processFetchedPage(graph, func, pid, buffer);
                     ppid_start++;
@@ -159,12 +161,13 @@ class ScatterWorker {
                 index++;
             }
         }
-        if(item.scratch){
-            magazine* pscratch = (magazine*) item._scratch_buf;
-            // max io number is 32, scratch is 31,max = 30;
-            sync.add_num_free_pages(item.disk_id, (pscratch->max + 2));
-            _num_processed_pages += (pscratch->max + 1);
-            free(item._scratch_buf);
+        if(item.hit){
+            struct hitchhike* hit = (struct hitchhike*) item._hit_buf;
+            // max io number is 32, hit is 31,max = 30;
+            sync.add_num_free_pages(item.disk_id, (hit->max + 2));
+            _num_processed_pages += (hit->max + 1);
+            free(item._hit_buf);
+            free(item.pages_id);
         } else {
             sync.add_num_free_pages(item.disk_id, item.num);
             _num_processed_pages += item.num;
