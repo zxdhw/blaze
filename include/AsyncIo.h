@@ -28,7 +28,7 @@ static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
 }
 
 static int io_submit_hit(aio_context_t ctx, long nr, struct iocb **iocbpp, 
-                                    unsigned int bpf_fd, char ** scratch_bufs) {
+                                    unsigned int bpf_fd, struct hitchhike **scratch_bufs) {
     return syscall(__NR_io_submit_hit, ctx, nr, iocbpp, bpf_fd, scratch_bufs);
 }
 

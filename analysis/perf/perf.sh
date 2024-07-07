@@ -4,8 +4,8 @@ PERF_PARSED_LIST='/home/zxd/blaze/analysis/perf'
 PERF_PARSED_GRAPH='/home/zxd/blaze/analysis/perf'
 PERF_RES='/home/zxd/blaze/analysis/perf'
 APP_PATH='/home/zxd/blaze/build/bin'
-DATA='/home/zxd/dataset/graph/sk2005.gr.adj.0'
-INDEX='/home/zxd/dataset/graph/sk2005.gr.index'
+DATA='/home/zxd/dataset/graph0/sk2005.gr.adj.0'
+INDEX='/home/zxd/dataset/graph0/sk2005.gr.index'
 VMLINUX='/home/zxd/linux-build/linux/vmlinux'
 
 THREAD=10
@@ -20,14 +20,14 @@ do
 LOG_LEVEL="debug";
 # sudo $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;
-sudo perf record --all-cpus -e instructions -F 99 -o $PERF_RES/${HIT}_${e}.out $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $HIT $INDEX $DATA;
+sudo perf record --all-cpus -g -e instructions -F 99 -o $PERF_RES/${HIT}_${e}.out $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -hit $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;
 done
 
 # parse
 for e in "${apps[@]}"
 do
-sudo perf report --cpu $CORE -n --stdio -s symbol -i $PERF_RES/${HIT}_${e}.out  > $PERF_PARSED_LIST/${HIT}_${THREAD}_${e}_libaio_D128.txt;
+sudo perf report --cpu $CORE -n --stdio -s symbol -i $PERF_RES/${HIT}_${e}.out  > $PERF_PARSED_LIST/${HIT}_${THREAD}_${e}_libaio_4K_D1.txt;
 # sudo perf report --cpu 11 --call-graph=graph,0,caller,function,count --show-cpu-utilization -n --stdio -s symbol -i $PERF_RES/${HIT}_${e}.out  > $PERF_PARSED_LIST/${HIT}_${THREAD}_${e}_graph.txt;
 # --call-graph=graph,0,caller,function,count
 # --vmlinux 
