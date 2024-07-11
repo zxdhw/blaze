@@ -14,7 +14,7 @@ cll::opt<int>
 cll::opt<unsigned int>
     ioBufferSize("ioBufferSize",
                     cll::desc("IO buffer space size in MB (default: 1024)"),
-                    cll::init(256));
+                    cll::init(1024));
 cll::opt<unsigned int>
     hitchhike("hit",
                     cll::desc("use hitchhike ibaio syscall) (default: 0)"),

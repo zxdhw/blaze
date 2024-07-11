@@ -1,6 +1,7 @@
 #ifndef BLAZE_ASYNC_IO_H
 #define BLAZE_ASYNC_IO_H
 
+#include <linux/bpf.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <linux/aio_abi.h>

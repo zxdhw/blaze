@@ -9,23 +9,26 @@
 
 
 #path
-APP_PATH='/home/zxd/blaze/build/bin'
+# SCRIPT_PATH=`realpath $0`
+# BASE_DIR=`dirname $SCRIPT_PATH`
+
+APP_PATH=$HOME/blaze/build/bin
 # APP_PATH='/home/femu/blaze-old/blaze/build/bin'
-INDEX='/home/zxd/dataset/graph0'
-DATA='/home/zxd/dataset/graph0'
-RESULT='/home/zxd/blaze/analysis/graph/'
+INDEX=$HOME/dataset/mnt/nvme_haslab2
+DATA=$HOME/dataset/mnt/nvme_haslab2
+RESULT=$HOME/blaze/analysis/graph/P4510
 
 # parameter
-COMPUTEWORKERS=10
+COMPUTEWORKERS=14
 STARTNODE=50395005
 # 101
 HIT=1
 TIMES=1
 qd=1
 
-# declare -a hitSize=("1" "2" "4" "8" "16" "32" "64" "96" "128")
+# declare -a hitSize=("32" "64" "96" "127")
 
-declare -a hitSize=("128")
+declare -a hitSize=("1")
 declare -a apps=("bfs")
 #data and index
 declare -a index=("sk2005.gr.index")
@@ -51,11 +54,10 @@ declare -a data=("sk2005.gr.adj.0")
 #         for ((i=0; i<${#index[@]}; i++)); do
 #             k="${index[i]}"
 #             j="${data[i]}"
-#             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -queueDepth $qd -hit $HIT $INDEX/${k} $DATA/${j} > ${RESULT}/bfs_libaio_4k_D128.out
+#             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -queueDepth $qd -hit $HIT $INDEX/${k} $DATA/${j} >> ${RESULT}/bfs_libaio_nomerge_4k_D${qd}.out
 #         done
 #     done
 # done
-
 
 for ((n=0; n<TIMES; n++)); do
     for h in "${hitSize[@]}"; do
@@ -64,8 +66,8 @@ for ((n=0; n<TIMES; n++)); do
                 k="${index[i]}"
                 j="${data[i]}"
                 # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $HIT $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
-                sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -hit $HIT -queueDepth $qd -hitSize ${h} $INDEX/${k} $DATA/${j}
-                # > ${RESULT}/bfs_hit_${h}K_D1.out
+                sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -hit $HIT -queueDepth $qd -hitSize ${h} $INDEX/${k} $DATA/${j} 
+                # >> ${RESULT}/bfs_hit_H${h}_D1.out
             done
         done
     done
