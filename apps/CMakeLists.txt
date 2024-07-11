@@ -8,8 +8,7 @@ foreach(PROG bfs bfs_sync pagerank pagerank_sync wcc wcc_sync bc bc_sync)
     target_link_libraries(${PROG} PUBLIC Threads::Threads
                             gllvm
                             galois_shmem
-                            tcmalloc
-                            bpf)
+                            tcmalloc)
 endforeach()
 
 # tools
@@ -18,6 +17,5 @@ foreach(PROG convert)
     target_link_libraries(${PROG} PUBLIC Threads::Threads
                             gllvm
                             galois_shmem
-                            tcmalloc
-                            bpf)
+                            tcmalloc)
 endforeach()

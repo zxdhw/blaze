@@ -165,7 +165,7 @@ class ScatterWorker {
             struct hitchhike* hit = (struct hitchhike*) item._hit_buf;
             // max io number is 32, hit is 31,max = 30;
             sync.add_num_free_pages(item.disk_id, (hit->max + 2));
-            _num_processed_pages += (hit->max + 1);
+            _num_processed_pages += (hit->max + 2);
             free(item._hit_buf);
             free(item.pages_id);
         } else {

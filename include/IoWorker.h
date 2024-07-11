@@ -79,6 +79,9 @@ class IoWorker {
         // if(is_hitchhike(_hitchhike)){
         //     init_bpf_program();
         // }
+        if(_hitchhike){
+            printf("# Hit IO Size    : %d \n", MAX_BIO_SIZE/PAGE_SIZE);
+        }
         _fd = fd;
         if(_kernel_stat){
             io_stat(_stats_bufs);
@@ -322,12 +325,6 @@ class IoWorker {
                 {
                     num_pages++;
                 }
-                // beg++;
-                // while (beg < end && num_pages < IO_MAX_PAGES_PER_REQ)
-                // {
-                //     beg++;
-                //     num_pages++;  
-                // }
 
                 // wait until free pages are available
                 while (sync.get_num_free_pages(_id) < num_pages) {}
@@ -428,16 +425,15 @@ class IoWorker {
     }
         //zhengxd: 向hit中填充IO
     void hit_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint64_t used_pages,
-                        struct hitchhike* _hit_buf, uint64_t *pages_id){
+                    struct hitchhike* _hit_buf, uint64_t *pages_id){
 
         PAGEID page_id;
         uint64_t cur_pages;
         uint64_t offset = 0;
         uint64_t offset_pages = 0, index = 0;
-        uint64_t max_pages = IO_MAX_PAGES_PER_MG - used_pages;
         _buffer_len = used_pages * PAGE_SIZE;
 
-        while (beg < end && _buffer_len < MAX_BIO_SIZE ) {
+        while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE ) {
             // skip an entire word in bitmap if possible
             // note: this is quite effective to keep IO queue busy
             if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
@@ -449,17 +445,10 @@ class IoWorker {
                 beg++;
                 continue;
             } else {
-                // check continuous pages up to 128KB
+                // check continuous pages up to MAX_BIO_SIZE
                 // check beg is not host io
                 page_id = beg;
                 cur_pages = 1;
-                // while (page_bitmap->get_bit(++beg)
-                //              && cur_pages < IO_MAX_PAGES_PER_REQ
-                //              && beg < end 
-                //              && cur_pages < max_pages - offset_pages)
-                // {
-                //     cur_pages++;
-                // }
                 offset_pages += cur_pages;
                 offset = (uint64_t)page_id * PAGE_SIZE;
                 _buffer_len += cur_pages * PAGE_SIZE;
@@ -506,15 +495,9 @@ class IoWorker {
                 page_id = beg;
                 num_pages = 1;
                 beg++;
-                // while (page_bitmap->get_bit(++beg)
-                //              && beg < end 
-                //              && num_pages < IO_MAX_PAGES_PER_REQ)
-                // {
-                //     num_pages++;
-                // }
                 // struct hitchhike 填充
-                uint64_t *pages_id = (uint64_t *)malloc(128 *sizeof(uint64_t));
-                struct hitchhike* _hit_buf = (struct hitchhike*)malloc(sizeof(struct hitchhike));
+                uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
+                struct hitchhike* _hit_buf = (struct hitchhike*)aligned_alloc(PAGE_SIZE,sizeof(struct hitchhike));
                 memset(_hit_buf,0,sizeof(struct hitchhike));
                 hit_dense(page_bitmap,beg,end,num_pages,_hit_buf,pages_id);
                 uint64_t hit_pages = _buffer_len / PAGE_SIZE;
@@ -564,13 +547,13 @@ class IoWorker {
 
     //zhengxd: 向hit中填充IO
     void hit_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,const CountableBag<PAGEID>::iterator& end, 
-                        uint64_t used_pages,struct hitchhike* _hit_buf, uint64_t* pages_id){
+                        uint64_t used_pages, struct hitchhike* _hit_buf, uint64_t* pages_id){
 
         uint64_t offset = 0, index = 0;
         _buffer_len = used_pages * PAGE_SIZE;
         PAGEID page_id;
 
-        while (beg != end && _buffer_len < MAX_BIO_SIZE) {
+        while ((beg != end) && (index <= HIT_NUMBER) && (_buffer_len < MAX_BIO_SIZE)) {
   
             page_id = *beg;
             if (page_bitmap->get_bit(page_id)) {
@@ -621,8 +604,8 @@ class IoWorker {
             beg++;
 
             //scratch，无论scratch是否包含数据，都下发一个scratch。
-            struct hitchhike* _hit_buf = (struct hitchhike*)malloc(sizeof(struct hitchhike));
-            uint64_t *pages_id = (uint64_t *)malloc(128 *sizeof(uint64_t));
+            struct hitchhike* _hit_buf = (struct hitchhike*)aligned_alloc(PAGE_SIZE,sizeof(struct hitchhike));
+            uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
             memset(_hit_buf,0,sizeof(struct hitchhike));
 
             hit_sparse(page_bitmap,beg,end,1,_hit_buf,pages_id);
@@ -723,6 +706,8 @@ class IoWorker {
         assert(received >= 0);
 
         for (int i = 0; i < received; i++) {
+            // if(_events[i].res < 0){
+            //     printf("--------ERROR: _events sign is %lld\n",_events[i].res);
             assert(_events[i].res > 0);
             auto item = reinterpret_cast<IoItem*>(_events[i].data);
             done_tasks[i] = item;

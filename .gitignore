@@ -3,11 +3,12 @@
 # 忽略 build 文件夹
 build/
 .cache/
+/test/
 
-# 忽略 analysis 文件夹中的所有文件
+# 不忽略 analysis 文件夹中的所有文件
 !analysis
 
-# 但是包括 analysis 文件夹中的 .sh 文件
+# 但是忽略 analysis 文件夹中的这些文件
 analysis/**/*.txt
 analysis/**/*.out
 analysis/**/*.log
