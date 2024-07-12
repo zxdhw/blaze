@@ -20,6 +20,7 @@ RESULT=$HOME/blaze/analysis/graph/P4510
 
 # parameter
 COMPUTEWORKERS=14
+COMPUTEWORKERS=14
 STARTNODE=50395005
 # 101
 HIT=1
@@ -55,6 +56,7 @@ declare -a data=("sk2005.gr.adj.0")
 #             k="${index[i]}"
 #             j="${data[i]}"
 #             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -queueDepth $qd -hit $HIT $INDEX/${k} $DATA/${j} >> ${RESULT}/bfs_libaio_nomerge_4k_D${qd}.out
+#             sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -queueDepth $qd -hit $HIT $INDEX/${k} $DATA/${j} >> ${RESULT}/bfs_libaio_nomerge_4k_D${qd}.out
 #         done
 #     done
 # done
@@ -66,6 +68,8 @@ for ((n=0; n<TIMES; n++)); do
                 k="${index[i]}"
                 j="${data[i]}"
                 # sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -ebpf $HIT $INDEX/${k} $DATA/${j} > ${RESULT}/magazine_${COMPUTEWORKERS}_${e}.out
+                sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -hit $HIT -queueDepth $qd -hitSize ${h} $INDEX/${k} $DATA/${j} 
+                # >> ${RESULT}/bfs_hit_H${h}_D1.out
                 sudo $APP_PATH/${e} -computeWorkers $COMPUTEWORKERS -startNode $STARTNODE -hit $HIT -queueDepth $qd -hitSize ${h} $INDEX/${k} $DATA/${j} 
                 # >> ${RESULT}/bfs_hit_H${h}_D1.out
             done

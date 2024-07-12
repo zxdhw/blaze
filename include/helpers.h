@@ -19,6 +19,7 @@
 #include "hit_types.h"
 
 struct hitchhike;
+#define HIT_NUMBER HIT_MAX
 
 namespace blaze {
 
