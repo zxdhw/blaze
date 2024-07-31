@@ -13,9 +13,6 @@
 #include <string.h>
 #include <linux/lirc.h>
 #include <linux/input.h>
-#include <linux/bpf.h>
-// #include <bpf/bpf.h>
-// #include <bpf/libbpf.h>
 #include "hit_types.h"
 
 struct hitchhike;
@@ -25,82 +22,85 @@ namespace blaze {
 
 struct hit_stats {
 
-    long io_time;
-    long io_count;
+	long io_time;
+	long io_count;
 
 	long aio_time;
 	long aio_count;
 
 	long aio_hit_time;
 	long aio_hit_count;
-    
+
 	long read_iter_time;
 	long read_iter_count;
+
+	long file_read_iter_time;
+	long file_read_iter_count;
 
 	long fs_time;
 	long fs_count;
 
+	long submit_bio_time;
+	long submit_bio_count;
+
 	long block_time;
 	long block_count;
+
+	long bio_submit_time;
+	long bio_submit_count;
 
 	long driver_time;
 	long driver_count;
 
+	long queue_rq_time;
+	long queue_rq_count;
+
+	long verify_time;
+	long verify_count;
+
 	long dio_time;
 	long dio_count;
 
-    long filemap_wait_time;
-    long filemap_wait_count;
+	long filemap_wait_time;
+	long filemap_wait_count;
 
 	long iomap_time;
 	long iomap_count;
 
-    long iomap_hit_time;
+	long iomap_hit_time;
 	long iomap_hit_count;
 
 	long get_page_time;
 	long get_page_count;
 
-    long bio_time;
+	long bio_time;
 	long bio_count;
 
-    long hit_buf_time;
+	long hit_buf_time;
 	long hit_buf_count;
 
 	long req_time;
 	long req_count;
 
-    long dma_time;
+	long dma_time;
 	long dma_count;
 
-    long hit_cmd_time;
+	long hit_cmd_time;
 	long hit_cmd_count;
 
-    long sq_time;
+	long sq_time;
 	long sq_count;
 
-    long sq_write_time;
-	long sq_write_count;
+	long cmd_time;
+	long cmd_count;
 
-    long lock_time;
-	long lock_count;
+	long dma_unmap_time;
+	long dma_unmap_count;
 
 	long interrupt_time;
 	long interrupt_count;
+
 };
-
-// static int load_bpf_program(const char *path) {
-//     struct bpf_object *obj;
-//     int ret, progfd;
-
-//     ret = bpf_prog_load(path, BPF_PROG_TYPE_XRP, &obj, &progfd);
-//     if (ret) {
-//         printf("Failed to load bpf program\n");
-//         exit(1);
-//     }
-
-//     return progfd;
-// }
 
 static void dump_page(uint8_t *page_image, uint64_t size) {
     int row, column, addr;

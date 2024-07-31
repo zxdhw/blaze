@@ -1,6 +1,7 @@
 #prarm
-filename='bfs_rmat27_uran27'
-runtime=15
+# filename='bfs_rmat27-libaio-4k-nomerge'
+filename='bfs_sk2005-hit16'
+runtime=30
 frequency=1
 device='/dev/nvme1n1'
 

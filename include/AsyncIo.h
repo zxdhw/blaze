@@ -1,7 +1,6 @@
 #ifndef BLAZE_ASYNC_IO_H
 #define BLAZE_ASYNC_IO_H
 
-#include <linux/bpf.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <linux/aio_abi.h>
@@ -29,8 +28,8 @@ static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
 }
 
 static int io_submit_hit(aio_context_t ctx, long nr, struct iocb **iocbpp, 
-                                    unsigned int bpf_fd, struct hitchhike **scratch_bufs) {
-    return syscall(__NR_io_submit_hit, ctx, nr, iocbpp, bpf_fd, scratch_bufs);
+                                    struct hitchhike **hit_bufs) {
+    return syscall(__NR_io_submit_hit, ctx, nr, iocbpp, hit_bufs);
 }
 
 static int io_stat(struct hit_stats* stats_bufs) {

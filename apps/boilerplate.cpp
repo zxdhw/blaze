@@ -25,8 +25,8 @@ cll::opt<unsigned int>
                     cll::init(128));
 cll::opt<unsigned int>
     hitSize("hitSize",
-                    cll::desc("Hitchhike size in KB (default: 128)"),
-                    cll::init(128));
+                    cll::desc("Hitchhike size in KB (default: 32)"),
+                    cll::init(32));
                 
 cll::opt<std::string>
     outIndexFilename(cll::Positional, cll::desc("<out index file>"), cll::Required);

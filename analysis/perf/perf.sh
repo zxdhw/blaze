@@ -18,7 +18,6 @@ declare -a apps=('bfs')
 for e in "${apps[@]}"
 do
 LOG_LEVEL="debug";
-# sudo $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -ebpf $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;
 sudo perf record --all-cpus -g -e instructions -F 99 -o $PERF_RES/${HIT}_${e}.out $APP_PATH/${e} -computeWorkers $THREAD -startNode $STARTNODE -hit $HIT $INDEX $DATA;
 # timeout 25s;  -C $CORE; -g;

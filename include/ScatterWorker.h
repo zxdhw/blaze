@@ -113,6 +113,14 @@ class ScatterWorker {
         VID* edges = (VID*)(buffer + offset_in_buf);
         for (uint32_t i = 0; i < degree; i++) {
             VID dst = edges[i];
+            if(dst >= 50636154){
+                // printf("--------ERROR DST: dst is %u, page start is %llu, page end is %llu\n",dst,page_start,page_end);
+                break;
+                // uint8_t *buf = (uint8_t*)buffer;
+                // dump_page(buf, 4096);
+                // assert( dst < 50636154);
+            }
+
             if (func.cond(dst)){
                 // printf("----edge vertex is %u -------\n",dst);
                 _bins->append(_id, dst, func.scatter(vid, dst));
@@ -127,6 +135,7 @@ class ScatterWorker {
         PAGEID ppid_start = item.page;
         const PAGEID ppid_end       = item.page + item.num;
         char* buffer = item.buf;
+        // memset(buffer,0,8);
         // printf("----nromal pid is %u -------\n",ppid_start);
         while (ppid_start < ppid_end) {
             /* blaze的数据分布  
@@ -153,6 +162,7 @@ class ScatterWorker {
                 
                 // printf("----hit pid is %u -------\n",ppid_start);
                 while (ppid_start < ppid_end_hit) {
+                    // memset(buffer,0,8);
                     const PAGEID pid = ppid_start * _num_disks + item.disk_id;
                     processFetchedPage(graph, func, pid, buffer);
                     ppid_start++;
