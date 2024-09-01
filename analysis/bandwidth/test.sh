@@ -1,31 +1,17 @@
 #!/bin/bash
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 0 /home/zhengxd/mnt/nvme/sc22/rmat27.gr.index /home/zhengxd/mnt/nvme/sc22/rmat27.gr.adj.0 
-# sudo ~/blaze/build/bin/bfs -computeWorkers 8 -startNode 0 /home/zhengxd/mnt/nvme1/sc22/rmat27.gr.index /home/zhengxd/mnt/nvme1/sc22/rmat27.gr.adj.0  
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 12 /home/zhengxd/mnt/nvme/sc22/twitter.gr.index /home/zhengxd/mnt/nvme/sc22/twitter.gr.adj.0  
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 50395005 /home/zhengxd/mnt/nvme/sc22/sk2005.gr.index /home/zhengxd/mnt/nvme/sc22/sk2005.gr.adj.0 
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 0 /home/zhengxd/mnt/nvme/sc22/uran27.gr.index /home/zhengxd/mnt/nvme/sc22/uran27.gr.adj.0 
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 0 /home/zhengxd/mnt/nvme2/sc22/rmat27.gr.index /home/zhengxd/mnt/nvme2/sc22/rmat27.gr.adj.0 
-# sudo ~/blaze/build/bin/bfs -computeWorkers 16 -startNode 101 /home/zhengxd/mnt/nvme1/sc22/friendster.gr.index /home/zhengxd/mnt/nvme1/sc22/friendster.gr.adj.0 
 
 
 #path
-# SCRIPT_PATH=`realpath $0`
-# BASE_DIR=`dirname $SCRIPT_PATH`
-
 APP_PATH=/home/zhengxd/blaze/build/bin
-# INDEX=$HOME/dataset/mnt/nvme_haslab2
-# DATA=$HOME/dataset/mnt/nvme_haslab2
 INDEX=/home/zhengxd/dataset/mnt/samsung5/
 DATA=/home/zhengxd/dataset/mnt/samsung5/
 RESULT=/home/zhengxd/blaze/analysis/graph/haslab19/
 
 # parameter
 COMPUTEWORKERS=16
-# STARTNODE=0
-STARTNODE=50395005
-# 101
 HIT=1
 TIMES=1
+STARTNODE=50395005
 
 # libaio arg
 declare -a depth=("128")

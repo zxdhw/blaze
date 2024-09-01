@@ -35,9 +35,9 @@ struct IoItem {
     int     num;
     char*   buf;
     bool    hit;
-    struct hitchhike*   _hit_buf;
+    struct hitchhiker*   _hit_buf;
     uint64_t*   pages_id;
-    IoItem(int d, PAGEID p, int n, char* b, bool h, struct hitchhike* c, uint64_t* i): disk_id(d), page(p), num(n), 
+    IoItem(int d, PAGEID p, int n, char* b, bool h, struct hitchhiker* c, uint64_t* i): disk_id(d), page(p), num(n), 
                                                                  buf(b), hit(h), _hit_buf(c), pages_id(i) {}
     IoItem(int d, PAGEID p, int n, char* b, bool h): disk_id(d), page(p), num(n), buf(b),hit(h) {}
 };

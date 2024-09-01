@@ -150,7 +150,7 @@ class ScatterWorker {
         }
         // 处理hit
         if(item.hit){
-            struct hitchhike* hit = (struct hitchhike*) item._hit_buf;
+            struct hitchhiker* hit = (struct hitchhiker*) item._hit_buf;
             uint64_t* pages_id = (uint64_t*) item.pages_id;
             uint64_t index = 0;
             while( hit->in_use && index <= hit->max){
@@ -172,7 +172,7 @@ class ScatterWorker {
             }
         }
         if(item.hit){
-            struct hitchhike* hit = (struct hitchhike*) item._hit_buf;
+            struct hitchhiker* hit = (struct hitchhiker*) item._hit_buf;
             // max io number is 32, hit is 31,max = 30;
             sync.add_num_free_pages(item.disk_id, (hit->max + 2));
             _num_processed_pages += (hit->max + 2);

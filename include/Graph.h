@@ -201,7 +201,8 @@ class Graph {
     }
 
     void Print() {
-        printf("V: %'15u (%'u, %.1f%%)\n", _num_nodes, NumberOfNonEmptyNodes(), (double)NumberOfNonEmptyNodes() * 100.0 / _num_nodes);
+        // \033[1;31m这是红色高亮文本\033[0m\n
+        printf("\033[1;31m V: %'15u (%'u, %.1f%%)\033[0m\n", _num_nodes, NumberOfNonEmptyNodes(), (double)NumberOfNonEmptyNodes() * 100.0 / _num_nodes);
         printf("E: %'15lu\n", _num_edges);
     }
 

@@ -106,9 +106,9 @@ int main(int argc, char **argv) {
     galois::StatTimer time("Time", "BFS_MAIN");
     time.start();
     // int i =0;
-    struct hit_stats* _stats_bufs = (struct hit_stats*)calloc(1, sizeof(struct hit_stats));
-    io_stat(_stats_bufs);
-    printf("----io time is %ld, io count is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
+    // struct hit_stats* _stats_bufs = (struct hit_stats*)calloc(1, sizeof(struct hit_stats));
+    // io_stat(_stats_bufs);
+    // printf("----io time is %ld, io count is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
     while (!frontier->empty()) {
         Worklist<VID>* output = edgeMap(outGraph, frontier, BFS_F(parents, bins), prop_blocking, hitchhike);
         delete frontier;
@@ -118,8 +118,8 @@ int main(int argc, char **argv) {
         //     break;
         // }
     }
-    io_stat(_stats_bufs);
-    printf("----io time is %ld, io count is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
+    // io_stat(_stats_bufs);
+    // printf("----io time is %ld, io count is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
 
     delete frontier;
 

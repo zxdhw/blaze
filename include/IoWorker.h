@@ -3,6 +3,7 @@
 
 #include "Type.h"
 #include "Graph.h"
+#include "boilerplate.h"
 #include "hit_types.h"
 #include "galois/Bag.h"
 #include "Param.h"
@@ -29,9 +30,10 @@ class IoWorker {
             _buffered_tasks(out),
             _queued(0), _sent(0), _received(0), _requested_all(false),
             _total_bytes_accessed(0),_total_bytes_accessed_hit(0), _time(0.0),
-            duration_aio(0),duration_hit(0),
+            duration_io_submit(0),duration_hit(0),
             duration_received(0),duration_dispatch(0),
-            _time_stat(0), _kernel_stat(0),_test_random(1)
+            _time_stat(0), _kernel_stat(0),_test_random(0),
+            _queued_hit(0),_sent_hit(0)
     {
         initAsyncIo();
         initHitchhike();
@@ -64,7 +66,7 @@ class IoWorker {
     void initHitchhike ()
     {
         // 临时使用，与iocbs相同，内核拷贝完成后返回，才提交下一批请求。因此可以重复使用。
-        _hit_bufs_tmp = (struct hitchhike**)calloc(IO_QUEUE_DEPTH, sizeof(ptr__m));
+        _hit_bufs_tmp = (struct hitchhiker**)calloc(IO_QUEUE_DEPTH, sizeof(ptr__m));
     }
     
     void deinitHitchhike() {
@@ -77,9 +79,9 @@ class IoWorker {
 
         _hitchhike = hitchhike;
         if(_hitchhike){
-            printf("# Hit IO Size    : %d \n", MAX_BIO_SIZE/PAGE_SIZE);
+            // printf("# Hit IO Size    : %d \n", MAX_BIO_SIZE/PAGE_SIZE);
         }
-        printf("# IO Queue depth    : %d \n", IO_QUEUE_DEPTH);
+        // printf("# IO Queue depth    : %d \n", IO_QUEUE_DEPTH);
         _fd = fd;
         if(_kernel_stat){
             io_stat(_stats_bufs);
@@ -101,28 +103,34 @@ class IoWorker {
         }
         // printf("----MAX IO SIZE is %d, MAX AIO QUEUE is %d----\n",MAX_BIO_SIZE,IO_QUEUE_DEPTH);
         if(_time_stat){
-            duration_aio -= duration_aio;
+            duration_io_submit -= duration_io_submit;
             duration_hit -= duration_hit;
             duration_received -= duration_received;
             duration_dispatch -= duration_dispatch;
-            // printf("----release: hitchhike time is %lf, aio time is %lf----\n",duration_hit.count(),duration_aio.count());
-            // printf("----release: received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
         }
 
         if(_kernel_stat){
             io_stat(_stats_bufs);
-            printf("----io time is %ld, io count is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
+            //ktime 
+            // printf("----ktime time is %ld, ktime count is %ld----\n",_stats_bufs->ktime_time, _stats_bufs->ktime_count);
+
+            //aio
+            // printf("----io time kernel is %ld, io count kernel is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
+            // printf("----io time kernel is %ld, io count kernel is %ld----\n",_stats_bufs->io_time_kernel, _stats_bufs->io_count_kernel);
             // printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
-            // printf("----aio hit time is %ld, aio hit count is %ld----\n",_stats_bufs->aio_hit_time, _stats_bufs->aio_hit_count);
+            // // printf("----aio hit time is %ld, aio hit count is %ld----\n",_stats_bufs->aio_hit_time, _stats_bufs->aio_hit_count);
+            // printf("----get_user time is %ld, get_user count is %ld----\n",_stats_bufs->get_user_time, _stats_bufs->get_user_count);
+            // printf("----copy_user time is %ld, copy_user count is %ld----\n",_stats_bufs->copy_user_time, _stats_bufs->copy_user_count);
+            // printf("----aio_req time is %ld, aio_req count is %ld----\n",_stats_bufs->aio_req_time, _stats_bufs->aio_req_count);
+            // printf("----aio_fget time is %ld, aio_fget count is %ld----\n",_stats_bufs->aio_fget_time, _stats_bufs->aio_fget_count);
+            // printf("----aio_prep time is %ld, aio_prep count is %ld----\n",_stats_bufs->aio_prep_time, _stats_bufs->aio_prep_count);
+            // printf("----aio_setup time is %ld, aio_setup count is %ld----\n",_stats_bufs->aio_setup_time, _stats_bufs->aio_setup_count);
+            // printf("----verify time is %ld, verify count is %ld----\n",_stats_bufs->verify_time, _stats_bufs->verify_count);
             // printf("----read iter time is %ld, read iter count is %ld----\n",_stats_bufs->read_iter_time, _stats_bufs->read_iter_count);
+
+            //fs
             // printf("----fs time is %ld, fs count is %ld----\n",_stats_bufs->fs_time, _stats_bufs->fs_count);
             // printf("----file_read_iter time is %ld, file_read_iter count is %ld----\n",_stats_bufs->file_read_iter_time, _stats_bufs->file_read_iter_count);
-            // printf("----block time is %ld, block count is %ld----\n",_stats_bufs->block_time, _stats_bufs->block_count);
-            // printf("----bio submit time is %ld, bio submit count is %ld----\n",_stats_bufs->bio_submit_time, _stats_bufs->bio_submit_count);
-            // printf("----submit bio time is %ld, submit bio count is %ld----\n",_stats_bufs->submit_bio_time, _stats_bufs->submit_bio_count);
-            // printf("----queue rq time is %ld, queue rq count is %ld----\n",_stats_bufs->queue_rq_time, _stats_bufs->queue_rq_count);
-            // printf("----driver time is %ld, dirver count is %ld----\n",_stats_bufs->driver_time, _stats_bufs->driver_count);
-            // printf("----verify time is %ld, verify count is %ld----\n",_stats_bufs->verify_time, _stats_bufs->verify_count);
             // printf("----dio time is %ld, dio count is %ld----\n",_stats_bufs->dio_time, _stats_bufs->dio_count);
             // printf("----filemap time is %ld, filemap count is %ld----\n",_stats_bufs->filemap_wait_time, _stats_bufs->filemap_wait_count);
             // printf("----iomap time is %ld, iomap count is %ld----\n",_stats_bufs->iomap_time, _stats_bufs->iomap_count);
@@ -130,11 +138,24 @@ class IoWorker {
             // printf("----get page time is %ld, get page count is %ld----\n",_stats_bufs->get_page_time, _stats_bufs->get_page_count);
             // printf("----hit buf time is %ld, hit buf count is %ld----\n",_stats_bufs->hit_buf_time, _stats_bufs->hit_buf_count);
             // printf("----bio time is %ld, bio count is %ld----\n",_stats_bufs->bio_time, _stats_bufs->bio_count);
+            
+            //block 
+            // printf("----block time is %ld, block count is %ld----\n",_stats_bufs->block_time, _stats_bufs->block_count);
+            // printf("----bio submit time is %ld, bio submit count is %ld----\n",_stats_bufs->submit_bio_time, _stats_bufs->submit_bio_count);
+            // printf("----submit bio time is %ld, submit bio count is %ld----\n",_stats_bufs->submit_bio_time, _stats_bufs->submit_bio_count);
             // printf("----req time is %ld, req count is %ld----\n",_stats_bufs->req_time, _stats_bufs->req_count);
+            // printf("----plug time is %ld, plug count is %ld----\n",_stats_bufs->plug_time, _stats_bufs->plug_count);
+            // printf("----hit tag time is %ld, hit tag count is %ld----\n",_stats_bufs->hit_tag_time, _stats_bufs->hit_tag_count);
+
+            // //driver
+            // printf("----queue rq time is %ld, queue rq count is %ld----\n",_stats_bufs->queue_rq_time, _stats_bufs->queue_rq_count);
+            // printf("----driver time is %ld, dirver count is %ld----\n",_stats_bufs->driver_time, _stats_bufs->driver_count);
             // printf("----dma time is %ld, dma count is %ld----\n",_stats_bufs->dma_time, _stats_bufs->dma_count);
             // printf("----hit cmd time is %ld, hit cmd count is %ld----\n",_stats_bufs->hit_cmd_time, _stats_bufs->hit_cmd_count);
             // printf("----sq time is %ld, sq count is %ld----\n",_stats_bufs->sq_time, _stats_bufs->sq_count);
             // printf("----cmd time is %ld, cmd count is %ld----\n",_stats_bufs->cmd_time, _stats_bufs->cmd_count);
+
+            //interrupt
             // printf("----dma unmap time is %ld, dma unmap count is %ld----\n",_stats_bufs->dma_unmap_time, _stats_bufs->dma_unmap_count);
             // printf("----interrupt time is %ld, interrupt count is %ld----\n",_stats_bufs->interrupt_time, _stats_bufs->interrupt_count);
         }
@@ -200,7 +221,7 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            if((_sent - _received) <= IO_QUEUE_DEPTH){
+            if((_queued - _received) < IO_QUEUE_DEPTH){
                 if(is_hitchhike(_hitchhike)){
                     submitTasks_dense_hit(page_bitmap, beg, end, sync, io_sync);
                 } else {
@@ -212,7 +233,7 @@ class IoWorker {
             dispatchTasks(done_tasks, received);
         }
         if(_time_stat){
-            printf("----hitchhike time is %lf, aio time is %lf----\n",duration_hit.count(),duration_aio.count());
+            printf("----hitchhike time is %lf, io submit time is %lf----\n",duration_hit.count(),duration_io_submit.count());
         }
         
     }
@@ -227,7 +248,7 @@ class IoWorker {
 
         while (!_requested_all || _received < _queued) {
             
-            if((_sent - _received) <= IO_QUEUE_DEPTH){
+            if((_queued - _received) < IO_QUEUE_DEPTH){
                 if(is_hitchhike(_hitchhike)){
                     submitTasks_sparse_hit(beg, end, page_bitmap, sync, io_sync);
                 } else {
@@ -251,14 +272,14 @@ class IoWorker {
             // }
         }
         if(_time_stat) {
-            printf("----hitchhike time is %lf, aio time is %lf----\n",duration_hit.count(),duration_aio.count());
-            printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+            printf("----hitchhike time is %lf, io submit time is %lf----\n",duration_hit.count(),duration_io_submit.count());
+            // printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
         }
     }
 
     // //zhengxd: 向hit中填充IO
     void hit_random(PAGEID& beg, const PAGEID& end, uint64_t used_pages,
-                    struct hitchhike* _hit_buf, uint64_t *pages_id){
+                    struct hitchhiker* _hit_buf, uint64_t *pages_id){
 
         PAGEID page_id;
         uint64_t offset = 0;
@@ -300,7 +321,7 @@ class IoWorker {
             //zhengxd: hit random
             beg++;
             uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
-            struct hitchhike* _hit_buf = (struct hitchhike*)calloc(1, sizeof(struct hitchhike));
+            struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1, sizeof(struct hitchhiker));
             hit_random(beg, end,num_pages,_hit_buf,pages_id);
             uint64_t hit_pages = _buffer_len / PAGE_SIZE;
 
@@ -482,7 +503,7 @@ class IoWorker {
 
         if(_time_stat){
             _time_end = std::chrono::steady_clock::now();
-            duration_aio += (_time_end - _time_start);
+            duration_io_submit += (_time_end - _time_start);
         }
     }
 
@@ -542,12 +563,12 @@ class IoWorker {
 
         if(_time_stat){
             _time_end = std::chrono::steady_clock::now();
-            duration_aio += (_time_end - _time_start);
+            duration_io_submit += (_time_end - _time_start);
         }
     }
         //zhengxd: 向hit中填充IO
     void hit_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint64_t used_pages,
-                    struct hitchhike* _hit_buf, uint64_t *pages_id){
+                    struct hitchhiker* _hit_buf, uint64_t *pages_id){
 
         PAGEID page_id;
         uint64_t cur_pages;
@@ -555,7 +576,8 @@ class IoWorker {
         uint64_t offset_pages = 0, index = 0;
         _buffer_len = used_pages * PAGE_SIZE;
 
-        while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE ) {
+        // while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE && ((_queued_hit - _sent_hit) < IO_QUEUE_DEPTH)) {
+        while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE) {
             // skip an entire word in bitmap if possible
             // note: this is quite effective to keep IO queue busy
             if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
@@ -578,11 +600,12 @@ class IoWorker {
                 pages_id[index] = page_id;
                 _hit_buf->addr[index] = offset;
                 //zhengxd: size always == 4096
-                // _hit_buf->size[index] = PAGE_SIZE;
+                _hit_buf->size = PAGE_SIZE;
                 _hit_buf->max = index;
                 _hit_buf->in_use = 1;
                 index++;
                 beg++;
+                _queued_hit++;
             }
         }
     }
@@ -599,8 +622,10 @@ class IoWorker {
         PAGEID page_id;
         uint64_t index = 0;
         uint64_t num_pages;
+        uint64_t sent = 0;
 
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+        // while (beg < end && (_queued_hit - _sent_hit) < IO_QUEUE_DEPTH) {
             // skip an entire word in bitmap if possible
             // note: this is quite effective to keep IO queue busy
             if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
@@ -617,9 +642,10 @@ class IoWorker {
                 page_id = beg;
                 num_pages = 1;
                 beg++;
+                _queued_hit++;
                 // struct hitchhike 填充
                 uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
-                struct hitchhike* _hit_buf = (struct hitchhike*)calloc(1, sizeof(struct hitchhike));
+                struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1, sizeof(struct hitchhiker));
      
                 hit_dense(page_bitmap,beg,end,num_pages,_hit_buf,pages_id);
                 uint64_t hit_pages = _buffer_len / PAGE_SIZE;
@@ -638,6 +664,7 @@ class IoWorker {
                 // debug info : char (1字节)， SCRATCH （4096字节）
                 // dump_page((unsigned char *)(&_hit_buf[index]), 4096);
                 // printf("----io submit: ptr is %p----\n", _hit_buf);
+                sent += (_buffer_len/PAGE_SIZE);
             }
         }
 
@@ -658,18 +685,19 @@ class IoWorker {
         int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _hit_bufs_tmp);
         if (ret > 0) {
             _sent += ret;
+            _sent_hit += sent;
         }
 
         if(_time_stat){
             _time_end = std::chrono::steady_clock::now();
-            duration_aio += (_time_end - _time_start);
+            duration_io_submit += (_time_end - _time_start);
         }
         memset(_hit_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
     //zhengxd: 向hit中填充IO
     void hit_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,const CountableBag<PAGEID>::iterator& end, 
-                        uint64_t used_pages, struct hitchhike* _hit_buf, uint64_t* pages_id){
+                        uint64_t used_pages, struct hitchhiker* _hit_buf, uint64_t* pages_id){
 
         uint64_t offset = 0, index = 0;
         _buffer_len = used_pages * PAGE_SIZE;
@@ -690,12 +718,12 @@ class IoWorker {
                 pages_id[index] = (uint64_t)page_id;
                 _hit_buf->addr[index] = offset;
                 // size always == 4096
-                // _hit_buf->size[index] = PAGE_SIZE;
+                _hit_buf->size = PAGE_SIZE;
                 _hit_buf->max = index;
                 _hit_buf->in_use = 1;
                 index++;
                 page_bitmap->set_bit(page_id);
-                // printf("----hit pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
+                _queued_hit++;
             }
         }
     }
@@ -713,6 +741,7 @@ class IoWorker {
         void* data;
         PAGEID page_id;
         uint64_t index = 0;
+        uint64_t sent = 0;
 
         while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             page_id = *beg;
@@ -724,9 +753,10 @@ class IoWorker {
             // 提前加锁，避免hit_sparse时重复下发请求
             page_bitmap->set_bit(page_id);
             beg++;
+            _queued_hit++;
 
             //scratch，无论scratch是否包含数据，都下发一个scratch。
-            struct hitchhike* _hit_buf = (struct hitchhike*)calloc(1,sizeof(struct hitchhike));
+            struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1,sizeof(struct hitchhiker));
             uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
 
             hit_sparse(page_bitmap,beg,end,1,_hit_buf,pages_id);
@@ -744,8 +774,9 @@ class IoWorker {
             // printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
             _hit_bufs_tmp[index] = _hit_buf;
             index++;
+            sent += (_buffer_len/PAGE_SIZE);
             // debug info
-            // dump_page((unsigned char *)(_hit_buf), sizeof(struct hitchhike));
+            // dump_page((unsigned char *)(_hit_buf), sizeof(struct hitchhiker));
            
         }
 
@@ -761,21 +792,16 @@ class IoWorker {
             duration_hit += (_time_end - _time_start);
             _time_start = std::chrono::steady_clock::now();
         }
-        // if(_kernel_stat){
-        //     io_stat(_stats_bufs);
-        // }
+
         int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _hit_bufs_tmp);
-        // if(_kernel_stat){
-        //     io_stat(_stats_bufs);
-        //     printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
-        // }
-        // printf("----we submit success io number %d----\n",ret);
         if (ret > 0) {
             _sent += ret;
+            _sent_hit += sent;
+            
         }
         if(_time_stat){
             _time_end = std::chrono::steady_clock::now();
-            duration_aio += (_time_end - _time_start);
+            duration_io_submit += (_time_end - _time_start);
         }
         memset(_hit_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
@@ -817,12 +843,10 @@ class IoWorker {
     int receiveTasks(IoItem** done_tasks) {
         if (_requested_all && _sent == _received) return 0;
 
-        // unsigned min = 0;
-        unsigned min = 0;
+        unsigned min = 1;
         unsigned max = IO_QUEUE_DEPTH;
 
         int received = io_getevents(_ctx, min, max, _events, NULL);
-        // printf("----we get success io number %d----\n",received);
         assert(received <= max);
         assert(received >= 0);
 
@@ -849,6 +873,8 @@ class IoWorker {
     int                     _fd;
     uint64_t                _queued;
     uint64_t                _sent;
+    uint64_t                _queued_hit;
+    uint64_t                _sent_hit;
     uint64_t                _received;
     bool                    _requested_all;
     int64_t                 _num_buffer_pages;
@@ -863,8 +889,8 @@ class IoWorker {
     struct io_event*                    _events;
 
     // hit 
-    struct hitchhike*                   _hit_buf_tmp;
-    struct hitchhike**                  _hit_bufs_tmp;
+    struct hitchhiker*                   _hit_buf_tmp;
+    struct hitchhiker**                  _hit_bufs_tmp;
     uint64_t                _scratch_pages;
     uint64_t                _hitchhike;
     size_t                  _buffer_len; // bytes
@@ -877,7 +903,7 @@ class IoWorker {
     std::chrono::time_point<std::chrono::steady_clock>  _time_start;
     std::chrono::time_point<std::chrono::steady_clock>  _time_end;
     std::chrono::duration<double> duration_hit;
-    std::chrono::duration<double> duration_aio;
+    std::chrono::duration<double> duration_io_submit;
     std::chrono::duration<double> duration_received;
     std::chrono::duration<double> duration_dispatch;
 

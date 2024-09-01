@@ -55,8 +55,12 @@ class Runtime {
     ~Runtime() {
         double io_bw_in_gbps = _total_io_time > 0 ? (double)_total_accessed_io_bytes / _total_io_time / GB : 0.0;
         double io_bw_in_gbps_hit = _total_io_time > 0 ? (double)_total_accessed_io_bytes_hit / _total_io_time / GB : 0.0;
-        printf("# IO SUMMARY    : %'lu bytes, %8.5f sec, %4.2f GB/s\n", _total_accessed_io_bytes, _total_io_time, io_bw_in_gbps);
-        printf("# IO SUMMARY hit   : %'lu bytes, %8.5f sec, %4.2f GB/s\n",_total_accessed_io_bytes_hit , _total_io_time, io_bw_in_gbps_hit);
+        if(_total_accessed_io_bytes_hit == 0){
+            // \033[1;31m这是红色高亮文本\033[0m\n
+            printf("\033[1;31m # IO SUMMARY    : %'lu bytes, %8.5f sec, %4.2f GB/s \033[0m\n", _total_accessed_io_bytes, _total_io_time, io_bw_in_gbps);
+        } else {
+            printf("\033[1;31m # IO SUMMARY hit   : %'lu bytes, %8.5f sec, %4.2f GB/s \033[0m\n",_total_accessed_io_bytes_hit , _total_io_time, io_bw_in_gbps_hit);
+        }
         printf("# SUMMARY       : %'lu edges accessed.\n", _total_accessed_edges);
 
         if (_io_engine)

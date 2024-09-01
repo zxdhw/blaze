@@ -1,0 +1,3 @@
+使用bandwidth-hit.sh 运行blaze
+使用grep.sh 获取带宽数据
+使用heatmap 画图

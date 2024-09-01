@@ -15,9 +15,12 @@ namespace blaze {
 
 
 
-
-#define __NR_io_submit_hit 447
-#define __NR_print_hit_stats 448
+//linux 5.12
+// #define __NR_io_submit_hit 447
+// #define __NR_print_hit_stats 448
+//linux6.5
+#define __NR_io_submit_hit 452
+#define __NR_print_hit_stats 453
 
 static int io_setup(unsigned nr, aio_context_t *ctxp) {
     return syscall(__NR_io_setup, nr, ctxp);
@@ -28,7 +31,7 @@ static int io_submit(aio_context_t ctx, long nr, struct iocb **iocbpp) {
 }
 
 static int io_submit_hit(aio_context_t ctx, long nr, struct iocb **iocbpp, 
-                                    struct hitchhike **hit_bufs) {
+                                    struct hitchhiker **hit_bufs) {
     return syscall(__NR_io_submit_hit, ctx, nr, iocbpp, hit_bufs);
 }
 

@@ -1,10 +1,11 @@
 
 *.json
+*.pdf
 # 忽略 build 文件夹
 build/
 .cache/
 /test/
-
+/scripts/result/
 # 不忽略 analysis 文件夹中的所有文件
 !analysis
 
@@ -19,3 +20,4 @@ analysis/**/*.pl
 analysis/**/*.folded
 analysis/**/*.csv
 analysis/**/*.script
+analysis/**/*.pdf
