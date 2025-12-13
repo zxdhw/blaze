@@ -1,5 +1,7 @@
 # queries
-foreach(PROG bfs bfs_sync pagerank pagerank_sync wcc wcc_sync spmv spmv_sync bc bc_sync)
+# spmv compile error(ignore this now)
+# foreach(PROG bfs bfs_sync pagerank pagerank_sync wcc wcc_sync spmv spmv_sync bc bc_sync test)
+foreach(PROG bfs bfs_sync pagerank pagerank_sync wcc wcc_sync bc bc_sync test)
     add_executable(${PROG} ${PROG}.cpp boilerplate.cpp ../src/Runtime.cpp ${CORE_HEADERS})
     target_link_libraries(${PROG} PUBLIC Threads::Threads
                             gllvm

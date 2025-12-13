@@ -3,6 +3,8 @@
 
 #include "Type.h"
 #include "Graph.h"
+#include "boilerplate.h"
+#include "hit_types.h"
 #include "galois/Bag.h"
 #include "Param.h"
 #include "IoSync.h"
@@ -10,7 +12,10 @@
 #include "AsyncIo.h"
 #include "Queue.h"
 #include "Param.h"
+#include <cstdint>
+#include <cstdlib>
 #include <unordered_set>
+#include "helpers.h"
 
 namespace blaze {
 
@@ -24,14 +29,21 @@ class IoWorker {
         :   _id(id),
             _buffered_tasks(out),
             _queued(0), _sent(0), _received(0), _requested_all(false),
-            _total_bytes_accessed(0), _time(0.0)
+            _total_bytes_accessed(0),_total_bytes_accessed_hit(0), _time(0.0),
+            duration_io_submit(0),duration_hit(0),
+            duration_received(0),duration_dispatch(0),
+            _time_stat(0), _kernel_stat(0),_test_random(0),
+            _queued_hit(0),_sent_hit(0)
     {
         initAsyncIo();
+        initHitchhike();
+        _stats_bufs = (struct hit_stats*)calloc(1, sizeof(struct hit_stats));
         _num_buffer_pages = (int64_t)buffer_size / PAGE_SIZE;
     }
 
     ~IoWorker() {
         deinitAsyncIo();
+        deinitHitchhike();
     }
 
     void initAsyncIo() {
@@ -47,15 +59,39 @@ class IoWorker {
         io_destroy(_ctx);
         free(_iocb);
         free(_iocbs);
+        free(_stats_bufs);
         free(_events);
     }
+        
+    void initHitchhike ()
+    {
+        // 临时使用，与iocbs相同，内核拷贝完成后返回，才提交下一批请求。因此可以重复使用。
+        _hit_bufs_tmp = (struct hitchhiker**)calloc(IO_QUEUE_DEPTH, sizeof(ptr__m));
+    }
+    
+    void deinitHitchhike() {
+        free(_hit_bufs_tmp);
+    }
+
 
     void run(int fd, bool dense_all, Bitmap* page_bitmap, CountableBag<PAGEID>* sparse_page_frontier,
-            Synchronization& sync, IoSync& io_sync) {
+            Synchronization& sync, IoSync& io_sync, FLAGS& hitchhike) {
+
+        _hitchhike = hitchhike;
+        if(_hitchhike){
+            // printf("# Hit IO Size    : %d \n", MAX_BIO_SIZE/PAGE_SIZE);
+        }
+        // printf("# IO Queue depth    : %d \n", IO_QUEUE_DEPTH);
         _fd = fd;
+        if(_kernel_stat){
+            io_stat(_stats_bufs);
+        }
+
         sync.set_num_free_pages(_id, _num_buffer_pages);
 
-        if (dense_all) {
+        if(_test_random && dense_all){
+            run_test_random(page_bitmap, sync, io_sync);
+        }else if (dense_all) {
             run_dense_all(page_bitmap, sync, io_sync);
         }
 
@@ -65,10 +101,72 @@ class IoWorker {
         } else {
             run_dense(page_bitmap, sync, io_sync);
         }
+        // printf("----MAX IO SIZE is %d, MAX AIO QUEUE is %d----\n",MAX_BIO_SIZE,IO_QUEUE_DEPTH);
+        if(_time_stat){
+            duration_io_submit -= duration_io_submit;
+            duration_hit -= duration_hit;
+            duration_received -= duration_received;
+            duration_dispatch -= duration_dispatch;
+        }
+
+        if(_kernel_stat){
+            io_stat(_stats_bufs);
+            //ktime 
+            // printf("----ktime time is %ld, ktime count is %ld----\n",_stats_bufs->ktime_time, _stats_bufs->ktime_count);
+
+            //aio
+            // printf("----io time kernel is %ld, io count kernel is %ld----\n",_stats_bufs->io_time, _stats_bufs->io_count);
+            // printf("----io time kernel is %ld, io count kernel is %ld----\n",_stats_bufs->io_time_kernel, _stats_bufs->io_count_kernel);
+            // printf("----aio time is %ld, aio count is %ld----\n",_stats_bufs->aio_time, _stats_bufs->aio_count);
+            // // printf("----aio hit time is %ld, aio hit count is %ld----\n",_stats_bufs->aio_hit_time, _stats_bufs->aio_hit_count);
+            // printf("----get_user time is %ld, get_user count is %ld----\n",_stats_bufs->get_user_time, _stats_bufs->get_user_count);
+            // printf("----copy_user time is %ld, copy_user count is %ld----\n",_stats_bufs->copy_user_time, _stats_bufs->copy_user_count);
+            // printf("----aio_req time is %ld, aio_req count is %ld----\n",_stats_bufs->aio_req_time, _stats_bufs->aio_req_count);
+            // printf("----aio_fget time is %ld, aio_fget count is %ld----\n",_stats_bufs->aio_fget_time, _stats_bufs->aio_fget_count);
+            // printf("----aio_prep time is %ld, aio_prep count is %ld----\n",_stats_bufs->aio_prep_time, _stats_bufs->aio_prep_count);
+            // printf("----aio_setup time is %ld, aio_setup count is %ld----\n",_stats_bufs->aio_setup_time, _stats_bufs->aio_setup_count);
+            // printf("----verify time is %ld, verify count is %ld----\n",_stats_bufs->verify_time, _stats_bufs->verify_count);
+            // printf("----read iter time is %ld, read iter count is %ld----\n",_stats_bufs->read_iter_time, _stats_bufs->read_iter_count);
+
+            //fs
+            // printf("----fs time is %ld, fs count is %ld----\n",_stats_bufs->fs_time, _stats_bufs->fs_count);
+            // printf("----file_read_iter time is %ld, file_read_iter count is %ld----\n",_stats_bufs->file_read_iter_time, _stats_bufs->file_read_iter_count);
+            // printf("----dio time is %ld, dio count is %ld----\n",_stats_bufs->dio_time, _stats_bufs->dio_count);
+            // printf("----filemap time is %ld, filemap count is %ld----\n",_stats_bufs->filemap_wait_time, _stats_bufs->filemap_wait_count);
+            // printf("----iomap time is %ld, iomap count is %ld----\n",_stats_bufs->iomap_time, _stats_bufs->iomap_count);
+            // printf("----iomap hit time is %ld, iomap hit count is %ld----\n",_stats_bufs->iomap_hit_time, _stats_bufs->iomap_hit_count);
+            // printf("----get page time is %ld, get page count is %ld----\n",_stats_bufs->get_page_time, _stats_bufs->get_page_count);
+            // printf("----hit buf time is %ld, hit buf count is %ld----\n",_stats_bufs->hit_buf_time, _stats_bufs->hit_buf_count);
+            // printf("----bio time is %ld, bio count is %ld----\n",_stats_bufs->bio_time, _stats_bufs->bio_count);
+            
+            //block 
+            // printf("----block time is %ld, block count is %ld----\n",_stats_bufs->block_time, _stats_bufs->block_count);
+            // printf("----bio submit time is %ld, bio submit count is %ld----\n",_stats_bufs->submit_bio_time, _stats_bufs->submit_bio_count);
+            // printf("----submit bio time is %ld, submit bio count is %ld----\n",_stats_bufs->submit_bio_time, _stats_bufs->submit_bio_count);
+            // printf("----req time is %ld, req count is %ld----\n",_stats_bufs->req_time, _stats_bufs->req_count);
+            // printf("----plug time is %ld, plug count is %ld----\n",_stats_bufs->plug_time, _stats_bufs->plug_count);
+            // printf("----hit tag time is %ld, hit tag count is %ld----\n",_stats_bufs->hit_tag_time, _stats_bufs->hit_tag_count);
+
+            // //driver
+            // printf("----queue rq time is %ld, queue rq count is %ld----\n",_stats_bufs->queue_rq_time, _stats_bufs->queue_rq_count);
+            // printf("----driver time is %ld, dirver count is %ld----\n",_stats_bufs->driver_time, _stats_bufs->driver_count);
+            // printf("----dma time is %ld, dma count is %ld----\n",_stats_bufs->dma_time, _stats_bufs->dma_count);
+            // printf("----hit cmd time is %ld, hit cmd count is %ld----\n",_stats_bufs->hit_cmd_time, _stats_bufs->hit_cmd_count);
+            // printf("----sq time is %ld, sq count is %ld----\n",_stats_bufs->sq_time, _stats_bufs->sq_count);
+            // printf("----cmd time is %ld, cmd count is %ld----\n",_stats_bufs->cmd_time, _stats_bufs->cmd_count);
+
+            //interrupt
+            // printf("----dma unmap time is %ld, dma unmap count is %ld----\n",_stats_bufs->dma_unmap_time, _stats_bufs->dma_unmap_count);
+            // printf("----interrupt time is %ld, interrupt count is %ld----\n",_stats_bufs->interrupt_time, _stats_bufs->interrupt_count);
+        }
     }
 
     uint64_t getBytesAccessed() const {
         return _total_bytes_accessed;
+    }
+
+    uint64_t getBytesAccessed_hit() const {
+        return _total_bytes_accessed_hit;
     }
 
     void initState() {
@@ -77,10 +175,30 @@ class IoWorker {
         _received = 0;
         _requested_all = false;
         _total_bytes_accessed = 0;
+        _total_bytes_accessed_hit = 0;
         _time = 0;
     }
 
  private:
+
+     void run_test_random(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
+        IoItem* done_tasks[IO_QUEUE_DEPTH];
+        int received;
+
+        PAGEID beg = 0;
+        const PAGEID end = page_bitmap->get_size();
+
+        while (!_requested_all || _received < _queued) {
+            if(is_hitchhike(_hitchhike)){
+                submitTasks_test_random_hit(beg, end, sync, io_sync);
+            }else{
+                submitTasks_test_random(beg, end, sync, io_sync);
+            }
+            received = receiveTasks(done_tasks);
+            dispatchTasks(done_tasks, received);
+        }
+    }
+
     void run_dense_all(Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
@@ -103,13 +221,25 @@ class IoWorker {
         const PAGEID end = page_bitmap->get_size();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
+            if((_queued - _received) < IO_QUEUE_DEPTH){
+                if(is_hitchhike(_hitchhike)){
+                    submitTasks_dense_hit(page_bitmap, beg, end, sync, io_sync);
+                } else {
+                    submitTasks_dense(page_bitmap, beg, end, sync, io_sync);
+                }
+            }
+
             received = receiveTasks(done_tasks);
             dispatchTasks(done_tasks, received);
         }
+        if(_time_stat){
+            printf("----hitchhike time is %lf, io submit time is %lf----\n",duration_hit.count(),duration_io_submit.count());
+        }
+        
     }
 
-    void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, Synchronization& sync, IoSync& io_sync) {
+    void run_sparse(CountableBag<PAGEID>* sparse_page_frontier, Bitmap* page_bitmap, 
+                            Synchronization& sync, IoSync& io_sync) {
         IoItem* done_tasks[IO_QUEUE_DEPTH];
         int received;
 
@@ -117,9 +247,151 @@ class IoWorker {
         auto const end = sparse_page_frontier->end();
 
         while (!_requested_all || _received < _queued) {
-            submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
+            
+            if((_queued - _received) < IO_QUEUE_DEPTH){
+                if(is_hitchhike(_hitchhike)){
+                    submitTasks_sparse_hit(beg, end, page_bitmap, sync, io_sync);
+                } else {
+                    submitTasks_sparse(beg, end, page_bitmap, sync, io_sync);
+                }
+            }
+            // if(_time_stat) {
+            //     _time_start = std::chrono::steady_clock::now();
+            // }
             received = receiveTasks(done_tasks);
+
+            // if(_time_stat) {
+            //     _time_end = std::chrono::steady_clock::now();
+            //     duration_received += (_time_end - _time_start);
+            //     _time_start = std::chrono::steady_clock::now();
+            // }
             dispatchTasks(done_tasks, received);
+            // if(_time_stat) {
+            //     _time_end = std::chrono::steady_clock::now();
+            //     duration_dispatch += (_time_end - _time_start);
+            // }
+        }
+        if(_time_stat) {
+            printf("----hitchhike time is %lf, io submit time is %lf----\n",duration_hit.count(),duration_io_submit.count());
+            // printf("----received time is %lf, dispatch time is %lf----\n",duration_received.count(),duration_dispatch.count());
+        }
+    }
+
+    // //zhengxd: 向hit中填充IO
+    void hit_random(PAGEID& beg, const PAGEID& end, uint64_t used_pages,
+                    struct hitchhiker* _hit_buf, uint64_t *pages_id){
+
+        PAGEID page_id;
+        uint64_t offset = 0;
+        uint64_t offset_pages = 0, index = 0;
+        _buffer_len = used_pages * PAGE_SIZE;
+
+        while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE ) {
+
+            // check continuous pages up to MAX_BIO_SIZE
+            // check beg is not host io
+            page_id = beg;
+            offset = (uint64_t)page_id * PAGE_SIZE;
+            _buffer_len +=  PAGE_SIZE;
+
+            //zhengxd: size always == 4096
+            pages_id[index] = page_id;
+            _hit_buf->addr[index] = offset;
+            _hit_buf->max = index;
+            _hit_buf->in_use = 1;
+            index++;
+            beg++;
+    
+        }
+    }
+
+    void submitTasks_test_random_hit(PAGEID& beg, const PAGEID& end,
+                            Synchronization& sync, IoSync& io_sync)
+    {
+        char* buf;
+        off_t offset;
+        void* data;
+        uint64_t index = 0;
+
+        while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+        
+            PAGEID page_id = beg;
+            uint64_t num_pages = 1;
+            
+            //zhengxd: hit random
+            beg++;
+            uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
+            struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1, sizeof(struct hitchhiker));
+            hit_random(beg, end,num_pages,_hit_buf,pages_id);
+            uint64_t hit_pages = _buffer_len / PAGE_SIZE;
+
+
+            // wait until free pages are available
+            while (sync.get_num_free_pages(_id) < hit_pages) {}
+            sync.add_num_free_pages(_id, (int64_t)hit_pages * (-1));
+            buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
+            offset = (uint64_t)page_id * PAGE_SIZE;
+
+            IoItem* item = new IoItem(_id, page_id, 1, buf, 1, _hit_buf, pages_id);
+            enqueueRequest_hit(buf, PAGE_SIZE, _buffer_len, offset, item);
+
+            _hit_bufs_tmp[index] = _hit_buf;
+            index++;
+
+            beg += (num_pages - 1);
+        }
+
+        if (beg >= end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+
+        int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _hit_bufs_tmp);
+        if (ret > 0) {
+            _sent += ret;
+        }
+    }
+
+
+    void submitTasks_test_random(PAGEID& beg, const PAGEID& end,
+                            Synchronization& sync, IoSync& io_sync)
+    {
+        char* buf;
+        off_t offset;
+        void* data;
+
+        while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+            
+            PAGEID page_id = beg;
+            uint64_t num_pages = 1;
+
+            // wait until free pages are available
+            while (sync.get_num_free_pages(_id) < num_pages) {}
+            sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
+
+            uint64_t len = num_pages * PAGE_SIZE;
+            buf = (char*)aligned_alloc(PAGE_SIZE, len);
+            offset = (uint64_t)page_id * PAGE_SIZE;
+            IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
+            enqueueRequest(buf, len, offset, item);
+
+            beg += num_pages;
+        }
+
+        if (beg >= end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+
+        int ret = io_submit(_ctx, _queued - _sent, _iocbs);
+        if (ret > 0) {
+            _sent += ret;
         }
     }
 
@@ -133,7 +405,7 @@ class IoWorker {
         while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
             // check continuous pages up to 16kB
             PAGEID page_id = beg;
-            uint32_t num_pages = IO_MAX_PAGES_PER_REQ;
+            uint64_t num_pages = IO_MAX_PAGES_PER_REQ;
             if (beg + num_pages > end)
                 num_pages = end - beg;
 
@@ -141,10 +413,10 @@ class IoWorker {
             while (sync.get_num_free_pages(_id) < num_pages) {}
             sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
 
-            uint32_t len = num_pages * PAGE_SIZE;
+            uint64_t len = num_pages * PAGE_SIZE;
             buf = (char*)aligned_alloc(PAGE_SIZE, len);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+            IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
             enqueueRequest(buf, len, offset, item);
 
             beg += num_pages;
@@ -167,6 +439,9 @@ class IoWorker {
     void submitTasks_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
                         Synchronization& sync, IoSync& io_sync)
     {
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         off_t offset;
         void* data;
@@ -186,7 +461,7 @@ class IoWorker {
             } else {
                 // check continuous pages up to 16kB
                 PAGEID page_id = beg;
-                uint32_t num_pages = 1;
+                uint64_t num_pages = 1;
                 while (page_bitmap->get_bit(++beg)
                              && beg < end 
                              && num_pages < IO_MAX_PAGES_PER_REQ)
@@ -197,12 +472,14 @@ class IoWorker {
                 // wait until free pages are available
                 while (sync.get_num_free_pages(_id) < num_pages) {}
                 sync.add_num_free_pages(_id, (int64_t)num_pages * (-1));
-
-                uint32_t len = num_pages * PAGE_SIZE;
+                
+                uint64_t len = num_pages * PAGE_SIZE;
                 buf = (char*)aligned_alloc(PAGE_SIZE, len);
                 offset = (uint64_t)page_id * PAGE_SIZE;
-                IoItem* item = new IoItem(_id, page_id, num_pages, buf);
+                IoItem* item = new IoItem(_id, page_id, num_pages, buf,0);
                 enqueueRequest(buf, len, offset, item);
+                // zhengxd: 打印page 连续性
+                // printf(" %ld \n",num_pages);
             }
         }
 
@@ -214,9 +491,19 @@ class IoWorker {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
 
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_hit += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
         int ret = io_submit(_ctx, _queued - _sent, _iocbs);
         if (ret > 0) {
             _sent += ret;
+        }
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_io_submit += (_time_end - _time_start);
         }
     }
 
@@ -225,6 +512,9 @@ class IoWorker {
                             Bitmap* page_bitmap,
                             Synchronization& sync, IoSync& io_sync)
     {
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
         char* buf;
         off_t offset;
         void* data;
@@ -241,12 +531,14 @@ class IoWorker {
             // wait until free pages are available
             while (sync.get_num_free_pages(_id) < 1) {}
             sync.add_num_free_pages(_id, (int64_t)(-1));
+            // zhengxd: 打印page 连续性
+            // printf(" 1 \n");
 
             buf = (char*)aligned_alloc(PAGE_SIZE, PAGE_SIZE);
             offset = (uint64_t)page_id * PAGE_SIZE;
-            IoItem* item = new IoItem(_id, page_id, 1, buf);
+            IoItem* item = new IoItem(_id, page_id, 1, buf,0);
             enqueueRequest(buf, PAGE_SIZE, offset, item);
-
+            //将下发过的page置为1，防止重复下发。
             page_bitmap->set_bit(page_id);
 
             beg++;
@@ -259,15 +551,263 @@ class IoWorker {
         for (size_t i = 0; i < _queued - _sent; i++) {
             _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
         }
-
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_hit += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
         int ret = io_submit(_ctx, _queued - _sent, _iocbs);
         if (ret > 0) {
             _sent += ret;
         }
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_io_submit += (_time_end - _time_start);
+        }
+    }
+        //zhengxd: 向hit中填充IO
+    void hit_dense(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end, uint64_t used_pages,
+                    struct hitchhiker* _hit_buf, uint64_t *pages_id){
+
+        PAGEID page_id;
+        uint64_t cur_pages;
+        uint64_t offset = 0;
+        uint64_t offset_pages = 0, index = 0;
+        _buffer_len = used_pages * PAGE_SIZE;
+
+        // while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE && ((_queued_hit - _sent_hit) < IO_QUEUE_DEPTH)) {
+        while (beg < end && (index <= HIT_NUMBER) && _buffer_len < MAX_BIO_SIZE) {
+            // skip an entire word in bitmap if possible
+            // note: this is quite effective to keep IO queue busy
+            if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
+                beg = Bitmap::pos_in_next_word(beg);
+                continue;
+            }
+
+            if (!page_bitmap->get_bit(beg)) {
+                beg++;
+                continue;
+            } else {
+                // check continuous pages up to MAX_BIO_SIZE
+                // check beg is not host io
+                page_id = beg;
+                cur_pages = 1;
+                offset_pages += cur_pages;
+                offset = (uint64_t)page_id * PAGE_SIZE;
+                _buffer_len += cur_pages * PAGE_SIZE;
+
+                pages_id[index] = page_id;
+                _hit_buf->addr[index] = offset;
+                //zhengxd: size always == 4096
+                _hit_buf->size = PAGE_SIZE;
+                _hit_buf->max = index;
+                _hit_buf->in_use = 1;
+                index++;
+                beg++;
+                _queued_hit++;
+            }
+        }
+    }
+
+    void submitTasks_dense_hit(Bitmap* page_bitmap, PAGEID& beg, const PAGEID& end,
+                        Synchronization& sync, IoSync& io_sync)
+    {
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
+        char* buf;
+        uint64_t offset;
+        void* data;
+        PAGEID page_id;
+        uint64_t index = 0;
+        uint64_t num_pages;
+        uint64_t sent = 0;
+
+        while (beg < end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+        // while (beg < end && (_queued_hit - _sent_hit) < IO_QUEUE_DEPTH) {
+            // skip an entire word in bitmap if possible
+            // note: this is quite effective to keep IO queue busy
+            if (!page_bitmap->get_word(Bitmap::word_offset(beg))) {
+                beg = Bitmap::pos_in_next_word(beg);
+                continue;
+            }
+
+            if (!page_bitmap->get_bit(beg)) {
+                beg++;
+                continue;
+
+            } else {
+                // check continuous pages up to 16kB
+                page_id = beg;
+                num_pages = 1;
+                beg++;
+                _queued_hit++;
+                // struct hitchhike 填充
+                uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
+                struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1, sizeof(struct hitchhiker));
+     
+                hit_dense(page_bitmap,beg,end,num_pages,_hit_buf,pages_id);
+                uint64_t hit_pages = _buffer_len / PAGE_SIZE;
+
+                // wait until free pages are available
+                while (sync.get_num_free_pages(_id) < hit_pages) {}
+                sync.add_num_free_pages(_id, (int64_t)hit_pages * (-1));
+                buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
+                offset = (uint64_t)page_id * PAGE_SIZE;
+
+                // aio init
+                IoItem* item = new IoItem(_id, page_id, 1, buf,1, _hit_buf,pages_id);
+                enqueueRequest_hit(buf, PAGE_SIZE, _buffer_len, offset, item);
+                _hit_bufs_tmp[index] = _hit_buf;
+                index++;
+                // debug info : char (1字节)， SCRATCH （4096字节）
+                // dump_page((unsigned char *)(&_hit_buf[index]), 4096);
+                // printf("----io submit: ptr is %p----\n", _hit_buf);
+                sent += (_buffer_len/PAGE_SIZE);
+            }
+        }
+
+        if (beg >= end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_hit += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
+
+        int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _hit_bufs_tmp);
+        if (ret > 0) {
+            _sent += ret;
+            _sent_hit += sent;
+        }
+
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_io_submit += (_time_end - _time_start);
+        }
+        memset(_hit_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
+    }
+
+    //zhengxd: 向hit中填充IO
+    void hit_sparse(Bitmap* page_bitmap, CountableBag<PAGEID>::iterator& beg,const CountableBag<PAGEID>::iterator& end, 
+                        uint64_t used_pages, struct hitchhiker* _hit_buf, uint64_t* pages_id){
+
+        uint64_t offset = 0, index = 0;
+        _buffer_len = used_pages * PAGE_SIZE;
+        PAGEID page_id;
+
+        while ((beg != end) && (index <= HIT_NUMBER) && (_buffer_len < MAX_BIO_SIZE)) {
+  
+            page_id = *beg;
+            if (page_bitmap->get_bit(page_id)) {
+                beg++;
+                continue;
+            } else {
+                // check continuous pages up to 128KB
+                // check beg is not host io
+                offset = (uint64_t)page_id * PAGE_SIZE;
+                _buffer_len += PAGE_SIZE;
+
+                pages_id[index] = (uint64_t)page_id;
+                _hit_buf->addr[index] = offset;
+                // size always == 4096
+                _hit_buf->size = PAGE_SIZE;
+                _hit_buf->max = index;
+                _hit_buf->in_use = 1;
+                index++;
+                page_bitmap->set_bit(page_id);
+                _queued_hit++;
+            }
+        }
+    }
+
+    void submitTasks_sparse_hit(CountableBag<PAGEID>::iterator& beg,
+                            const CountableBag<PAGEID>::iterator& end,
+                            Bitmap* page_bitmap,
+                            Synchronization& sync, IoSync& io_sync)
+    {
+        if(_time_stat){
+            _time_start = std::chrono::steady_clock::now();
+        }
+        char* buf;
+        uint64_t offset;
+        void* data;
+        PAGEID page_id;
+        uint64_t index = 0;
+        uint64_t sent = 0;
+
+        while (beg != end && (_queued - _sent) < IO_QUEUE_DEPTH) {
+            page_id = *beg;
+
+            if (page_bitmap->get_bit(page_id)) {
+                beg++;
+                continue;
+            }
+            // 提前加锁，避免hit_sparse时重复下发请求
+            page_bitmap->set_bit(page_id);
+            beg++;
+            _queued_hit++;
+
+            //scratch，无论scratch是否包含数据，都下发一个scratch。
+            struct hitchhiker* _hit_buf = (struct hitchhiker*)calloc(1,sizeof(struct hitchhiker));
+            uint64_t *pages_id = (uint64_t *)calloc(1,128 *sizeof(uint64_t));
+
+            hit_sparse(page_bitmap,beg,end,1,_hit_buf,pages_id);
+            uint64_t hit_pages = _buffer_len / PAGE_SIZE;
+
+            // wait until free pages are available
+            while (sync.get_num_free_pages(_id) < hit_pages) {}
+            sync.add_num_free_pages(_id, hit_pages*(-1));
+            buf = (char*)aligned_alloc(PAGE_SIZE, _buffer_len);
+            offset = (uint64_t)page_id * PAGE_SIZE;
+
+            // aio init
+            IoItem* item = new IoItem(_id, page_id, 1, buf,1, _hit_buf,pages_id);
+            enqueueRequest_hit(buf, PAGE_SIZE, _buffer_len, offset, item);
+            // printf("----start pid is %d, item buffer len is %ld-----\n",page_id,_buffer_len);
+            _hit_bufs_tmp[index] = _hit_buf;
+            index++;
+            sent += (_buffer_len/PAGE_SIZE);
+            // debug info
+            // dump_page((unsigned char *)(_hit_buf), sizeof(struct hitchhiker));
+           
+        }
+
+        if (beg == end) _requested_all = true;
+
+        if (_queued - _sent == 0) return;
+
+        for (size_t i = 0; i < _queued - _sent; i++) {
+            _iocbs[i] = &_iocb[(_sent + i) % IO_QUEUE_DEPTH];
+        }
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_hit += (_time_end - _time_start);
+            _time_start = std::chrono::steady_clock::now();
+        }
+
+        int ret = io_submit_hit(_ctx, _queued - _sent, _iocbs, _hit_bufs_tmp);
+        if (ret > 0) {
+            _sent += ret;
+            _sent_hit += sent;
+            
+        }
+        if(_time_stat){
+            _time_end = std::chrono::steady_clock::now();
+            duration_io_submit += (_time_end - _time_start);
+        }
+        memset(_hit_bufs_tmp, 0, (IO_QUEUE_DEPTH * sizeof(ptr__m)));
     }
 
     void enqueueRequest(char* buf, size_t len, off_t offset, void* data) {
-        uint32_t idx = _queued % IO_QUEUE_DEPTH;
+        uint64_t idx = _queued % IO_QUEUE_DEPTH;
         struct iocb* pIocb = &_iocb[idx];
         memset(pIocb, 0, sizeof(*pIocb));
         pIocb->aio_fildes = _fd;
@@ -281,10 +821,29 @@ class IoWorker {
         _total_bytes_accessed += len;
     }
 
+
+    void enqueueRequest_hit(char* buf, size_t data_len, size_t _buffer_len, off_t offset, void* data) {
+        uint64_t idx = _queued % IO_QUEUE_DEPTH;
+        struct iocb* pIocb = &_iocb[idx];
+        memset(pIocb, 0, sizeof(*pIocb));
+        pIocb->aio_fildes = _fd;
+        pIocb->aio_lio_opcode = IOCB_CMD_PREAD;
+        pIocb->aio_buf = (uint64_t)buf;
+        pIocb->aio_nbytes = _buffer_len;
+        pIocb->aio_offset = offset;
+        pIocb->aio_data = (uint64_t)data;
+        pIocb->aio_dsize = data_len;
+        _queued++;
+
+        _total_bytes_accessed += data_len;
+        _total_bytes_accessed_hit += _buffer_len;
+        _buffer_len = 0;
+    }    
+
     int receiveTasks(IoItem** done_tasks) {
         if (_requested_all && _sent == _received) return 0;
 
-        unsigned min = 0;
+        unsigned min = 1;
         unsigned max = IO_QUEUE_DEPTH;
 
         int received = io_getevents(_ctx, min, max, _events, NULL);
@@ -314,17 +873,40 @@ class IoWorker {
     int                     _fd;
     uint64_t                _queued;
     uint64_t                _sent;
+    uint64_t                _queued_hit;
+    uint64_t                _sent_hit;
     uint64_t                _received;
     bool                    _requested_all;
     int64_t                 _num_buffer_pages;
     // For statistics
     uint64_t                _total_bytes_accessed;
+    uint64_t                _total_bytes_accessed_hit;
     double                  _time;
 
     aio_context_t                       _ctx;
     struct iocb*                        _iocb;
     struct iocb**                       _iocbs;
     struct io_event*                    _events;
+
+    // hit 
+    struct hitchhiker*                   _hit_buf_tmp;
+    struct hitchhiker**                  _hit_bufs_tmp;
+    uint64_t                _scratch_pages;
+    uint64_t                _hitchhike;
+    size_t                  _buffer_len; // bytes
+
+    bool _time_stat;
+    bool _kernel_stat;
+    bool _test_random;
+
+    struct hit_stats* _stats_bufs;
+    std::chrono::time_point<std::chrono::steady_clock>  _time_start;
+    std::chrono::time_point<std::chrono::steady_clock>  _time_end;
+    std::chrono::duration<double> duration_hit;
+    std::chrono::duration<double> duration_io_submit;
+    std::chrono::duration<double> duration_received;
+    std::chrono::duration<double> duration_dispatch;
+
 };
 
 } // namespace blaze
